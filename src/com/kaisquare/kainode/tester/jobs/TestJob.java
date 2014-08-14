@@ -35,12 +35,15 @@ public class TestJob implements ITester {
 	@Override
 	public void doTest() throws Exception {
 		ActionResult result = null;
-		
+
+		int success = 0, failed = 0, error = 0;
+		boolean retrying = false;
 		try {
 			if (mConfig.actions.size() > 0)
 			{
 				mAllStatus = new TestActionStatus[mConfig.actions.size()];
 				int n = 0, retry = 0;
+				retrying = false;
 				for (JobActionConfiguration act : mConfig.actions)
 				{
 					RequestAction action = (RequestAction)Actions.create(act.type);
@@ -59,11 +62,13 @@ public class TestJob implements ITester {
 							result = action.submit(act.config);
 							mAllStatus[n] = result.getStatus();
 							AppLogger.i(this, ">>>>>>>>>> Action '%s'...%s <<<<<<<<<<", act.name, result.getStatus());
+							
 							if (!act.ignoreError && result.getStatus() != TestActionStatus.Ok)
 							{
 								if (act.retry > retry)
 								{
 									retry++;
+									retrying = true;
 									AppLogger.i(this, "retry action '%s' %d/%d", act.name, retry, act.retry);
 									continue;
 								}
@@ -75,12 +80,36 @@ public class TestJob implements ITester {
 						
 						break;
 					}
+					
+					switch (result.getStatus())
+					{
+					case Ok:
+						success++;
+						break;
+					case Failed:
+						failed++;
+						break;
+					case Error:
+						error++;
+						break;
+					default:
+					}
 				}
 			}
 			else
 				AppLogger.i(this, "No actions");
-		} catch (ActionNotFoundException | ActionFailedException e) {
+		} catch (ActionNotFoundException e) {
 			AppLogger.e(this, "Test job stopped: %s", e.getMessage());
+			error++;
+		} catch (ActionFailedException e) {
+			AppLogger.e(this, "Test job stopped: %s", e.getMessage());
+			failed++;
+		} catch (Exception e) {
+			AppLogger.e(this, e, "Test job stopped: %s", e.getMessage());
+			error++;
+		} finally {
+			AppLogger.i(this, "Test result: total %d, %d success, %d failed, %d error", 
+					mConfig.actions.size(), success, failed, error);
 		}
 		
 		AppLogger.i(this, "Done");

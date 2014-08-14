@@ -61,8 +61,12 @@ public class ShellExecuteAction extends RequestAction {
 			mPid = getPID(mProcess);
 			AppLogger.v(this, "pid = %s", mPid);
 			
-			mTimer = new Timer();
-			mTimer.schedule(new TimeoutTask(), config.timeout);
+			if (config.timeout > 0)
+			{
+				mTimer = new Timer();
+				mTimer.schedule(new TimeoutTask(), config.timeout);
+			}
+			
 			reader = new BufferedReader(new InputStreamReader(mProcess.getInputStream()));
 			String line;
 			
@@ -109,8 +113,11 @@ public class ShellExecuteAction extends RequestAction {
 			AppLogger.e(this, e, "error executing command: %s", Utils.isStringEmpty(command) ? config.command : command);
 			result.setStatus(TestActionStatus.Error);
 		} finally {
-			mTimer.cancel();
-			mTimer.purge();
+			if (mTimer != null)
+			{
+				mTimer.cancel();
+				mTimer.purge();
+			}
 			if (mProcess != null)
 			{
 				mProcess.destroy();
