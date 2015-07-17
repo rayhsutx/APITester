@@ -22,6 +22,7 @@ public final class Configuration {
 	
 	
 	public static final String JOB_FILE = "--job";
+	public static final String IGNORE_FAIL = "--ignore-fail";
 	
 	public static void usage()
 	{

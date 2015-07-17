@@ -34,15 +34,21 @@ public class KaiNodeTester {
 			System.exit(-1);
 		}
 		
+		Configuration config = Configuration.getConfig();
 		String[] files = value.split("\\,");
 		Map<String, String> variables = null;
 		for (String file : files)
 		{
-			AppLogger.i("", "Starting test from %s", file.trim());
+			AppLogger.i("", "\nStarting test from %s", file.trim());
 			TestJob tester;
 			try {
 				tester = new TestJob(file.trim(), variables);
 				variables = tester.doTest();
+				if (!config.hasConfig(Configuration.IGNORE_FAIL) && (tester.getErrors() > 0 || tester.getFailure() > 0))
+				{
+					AppLogger.w("", "TestJob '%s' not pass", file);
+					break;
+				}
 			} catch (Exception e) {
 				AppLogger.e("", e, "failed to run test '%s'", file);
 				break;

@@ -23,6 +23,7 @@ public class TestJob implements ITester {
 	private JobConfiguration mConfig;
 	private TestActionStatus[] mAllStatus;
 	private Map<String, String> defaultVariables;
+	private int success = 0, failed = 0, error = 0;
 
 	public TestJob(String jobFile, Map<String, String> defaultVariables) throws IOException
 	{
@@ -41,7 +42,6 @@ public class TestJob implements ITester {
 		ActionResult result = null;
 		Map<String, String> variables = defaultVariables;
 
-		int success = 0, failed = 0, error = 0;
 		try {
 			if (mConfig.actions.size() > 0)
 			{
@@ -63,10 +63,10 @@ public class TestJob implements ITester {
 						}
 						
 						try {
-							AppLogger.i(this, ">>>>>>>>>> Starting Action '%s'... <<<<<<<<<<", act.name);
+							AppLogger.i(this, "\n>>>>>>>>>> Starting Action '%s'... <<<<<<<<<<", act.name);
 							result = action.submit(act.config);
 							mAllStatus[n] = result.getStatus();
-							AppLogger.i(this, ">>>>>>>>>> Action '%s'...%s <<<<<<<<<<", act.name, result.getStatus());
+							AppLogger.i(this, ">>>>>>>>>> Action '%s'...%s <<<<<<<<<<\n", act.name, result.getStatus());
 							
 							if (!act.ignoreError && result.getStatus() != TestActionStatus.Ok)
 							{
@@ -125,6 +125,21 @@ public class TestJob implements ITester {
 	@Override
 	public TestActionStatus[] getAllStatus() {
 		return mAllStatus;
+	}
+	
+	public int getSuccess()
+	{
+		return success;
+	}
+	
+	public int getFailure()
+	{
+		return failed;
+	}
+	
+	public int getErrors()
+	{
+		return error;
 	}
 
 	public static class ActionFailedException extends Exception
