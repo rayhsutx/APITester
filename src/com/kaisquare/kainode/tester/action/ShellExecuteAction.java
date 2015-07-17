@@ -20,15 +20,14 @@ import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.kaisquare.utils.AppLogger;
-import com.kaisquare.utils.Utils;
+import com.kaisquare.kaisync.utils.AppLogger;
+import com.kaisquare.kaisync.utils.Utils;
 
 public class ShellExecuteAction extends RequestAction {
 	
 	private Process mProcess;
 	private Timer mTimer;
 	private String mPid;
-	private boolean mTimeout = false;
 
 	@Override
 	public String getActionName() {
@@ -101,9 +100,8 @@ public class ShellExecuteAction extends RequestAction {
 					out.write(line);
 			}
 			try {
-				mProcess.waitFor();
+				exitValue = mProcess.waitFor();
 			} catch (InterruptedException e) {}
-			exitValue = mProcess.exitValue();
 			
 			values.put("exitvalue", Integer.toString(exitValue));
 			result.putVariableAll(values);
@@ -186,6 +184,7 @@ public class ShellExecuteAction extends RequestAction {
 		return parsers;
 	}
 	
+	@SuppressWarnings("rawtypes")
 	private static String getPID(Process process)
 	{
 		try {
@@ -312,7 +311,6 @@ public class ShellExecuteAction extends RequestAction {
 				}
 				mProcess.destroy();
 			} catch (Exception e) {}
-			mTimeout = true;
 		}
 	}
 }

@@ -1,6 +1,6 @@
 package com.kaisquare.kup.api;
 
-import com.kaisquare.utils.Utils;
+import com.kaisquare.kaisync.utils.Utils;
 
 public class KupMessageContent {
 	

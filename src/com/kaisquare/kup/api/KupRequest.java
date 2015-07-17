@@ -9,7 +9,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import com.google.gson.annotations.SerializedName;
-import com.kaisquare.utils.AppLogger;
+import com.kaisquare.kaisync.utils.AppLogger;
 
 /**
  * KUP Request
@@ -20,7 +20,6 @@ public abstract class KupRequest implements Runnable, IKupRawDataReceivedListene
 	private String mApiUrl;
 	private KupSession mSession;
 	private Class<? extends KupResponseResult> mClass;
-	private volatile boolean mCancel = false;
 	private KupAPIRequest mRequest;
 	private IKupRawDataReceivedListener mDataListener;
 	
@@ -62,7 +61,6 @@ public abstract class KupRequest implements Runnable, IKupRawDataReceivedListene
 	 */
 	public void cancel()
 	{
-		mCancel = true;
 		if (mRequest != null)
 			mRequest.cancel();
 		
@@ -88,7 +86,6 @@ public abstract class KupRequest implements Runnable, IKupRawDataReceivedListene
 		if (session == null)
 			return new KupFailureResponseResult(-1, "Session is null");
 		
-		mCancel = false;
 		mSession = session;
 		mRequest = mIsNodeRequest ? KupAPI.createNodeRequest(session, apiUrl) : KupAPI.createRequest(session, apiUrl);
 		if (mDataListener != null)

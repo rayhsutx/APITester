@@ -14,8 +14,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 
-import com.kaisquare.utils.AppLogger;
-import com.kaisquare.utils.Utils;
+import com.kaisquare.kaisync.utils.AppLogger;
+import com.kaisquare.kaisync.utils.Utils;
 
 public class HttpRequestAction extends RequestAction {
 	

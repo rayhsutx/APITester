@@ -1,7 +1,7 @@
 package com.kaisquare.kup.api;
 
 import com.google.gson.annotations.SerializedName;
-import com.kaisquare.utils.AppLogger;
+import com.kaisquare.kaisync.utils.AppLogger;
 
 /**
  * This is the abstract based request class for the logged-in user

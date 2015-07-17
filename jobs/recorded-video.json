@@ -6,7 +6,7 @@
         "config": {
             "data": {
             	"cloud-host": "up.uat.kaisquare.com",
-                "host": "192.168.1.210",
+                "host": "192.168.1.130",
                 "port": "80",
                 "otp": "PRX5CX",
                 "license": "XUHZS - CVP8F - UMJIW",
@@ -17,9 +17,9 @@
                 "dev-port": "80",
                 "dev-user": "admin",
                 "dev-password": "",
-                "event-date-from": "14082014000000",
-                "event-date-to": "14082014235959",
-                "platform-device-id": "9"
+                "event-date-from": "28082014000000",
+                "event-date-to": "28082014235959",
+                "platform-device-id": "1"
             }
         }
     },

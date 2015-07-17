@@ -1,0 +1,130 @@
+{
+    "actions": [
+    {
+        "type": "argument",
+        "name": "pass parameters",
+        "config": {
+            "data": {
+            	"otp": "01OLET",
+            	"inventorynumber": "simulator-0",
+            	"mac-address": "22:22:22:22:22:22",
+            	"bucketname": "kaisquare",
+            	"host": "localhost",
+            	"port": "9000",
+            	"adminuser": "root",
+            	"adminpass": "root",
+            	"bucketuser": "admin",
+            	"bucketpass": "admin"
+            }
+        }
+    },
+    {
+        "type": "http",
+        "name": "login",
+        "config": {
+            "url": "http://{{host}}:{{port}}/api/superadmin/login",
+            "data": {
+                "user-name": "{{adminuser}}",
+                "password": "{{adminpass}}"
+            },
+            "values": {
+            	"result": "result",
+                "session": "session-key",
+                "userid": "user-id"
+            },
+	        "check": {
+	        	"result": "ok"
+	        }
+        }
+    },
+    {
+        "type": "http",
+        "name": "add license",
+        "config": {
+            "url": "http://{{host}}:{{port}}/api/superadmin/addnodelicense",
+            "data": {
+            	"session-key": "{{session}}",
+                "bucket-id": "2",
+                "cloud-storage-gb": "2",
+                "duration-months": "24",
+                "features": "[\"live-view\",\"live-track\",\"point-of-interests\",\"cloud-recording\",\"analytics-traffic-flow\",\"analytics-people-counting\",\"analytics-crowd-detection\",\"analytics-audience-profiling\",\"analytics-area-intrusion\",\"analytics-perimeter-defense\",\"analytics-area-loitering\",\"analytics-object-counting\",\"analytics-video-blur\",\"analytics-face-indexing\",\"report-traffic-flow\",\"report-people-counting\",\"report-crowd-detection\",\"report-audience-profiling\",\"report-audience-attention\",\"report-area-intrusion\",\"report-perimeter-defense\",\"report-area-loitering\",\"report-object-counting\",\"report-video-blur\",\"report-face-indexing\",\"periodic-reports\",\"bucket-management\",\"user-management\",\"role-management\",\"device-management\",\"kai-nodes\",\"inventory-management\",\"software-update-management\",\"access-key-management\",\"announcement-management\",\"audit-log\",\"periodic-report-management\",\"pos-management\",\"local-license-management\",\"label-management\"]",
+                "max-vca-count": "5"
+            },
+            "values": {
+            	"result": "result"
+            },
+	        "check": {
+	        	"result": "ok"
+	        }
+        }
+    },
+    {
+    	"type": "http",
+    	"name": "get license",
+    	"config": {
+    		"url": "http://{{host}}:{{port}}/api/superadmin/getnodelicenses",
+    		"data": {
+            	"session-key": "{{session}}",
+    			"bucket-id": "2"
+    		},
+    		"values": {
+            	"result": "result",
+    			"licensenumber": "node-licenses:$last:licenseNumber"
+    		},
+    		"check": {
+    			"result": "ok"
+    		}
+    	}
+    },
+    {
+        "type": "http",
+        "name": "login",
+        "config": {
+            "url": "http://{{host}}:{{port}}/api/otplogin",
+            "data": {
+                "otp": "{{otp}}"
+            },
+            "values": {
+            	"result": "result",
+                "session": "session-key",
+                "userid": "user-id"
+            },
+	        "check": {
+	        	"result": "ok"
+	        }
+        }
+    },
+    {
+    	"type": "http",
+    	"name": "register node",
+    	"config": {
+    		"url": "http://{{host}}:{{port}}/api/kaisquare/registernode",
+    		"data": {
+            	"session-key": "{{session}}",
+    			"license-number": "{{licensenumber}}",
+    			"registration-number": "{{inventorynumber}}",
+    			"device-name": "{{inventorynumber}}",
+    			"device-address": "Taipei",
+    			"device-latitude": "0",
+    			"device-longitude": "0",
+    			"release-number": "4.3",
+    			"mac-address": "{{mac-address}}"
+    		},
+    		"values": {
+            	"result": "result",
+            	"cloud-platform-device-id": "setup-info:cloudPlatformDeviceId",
+            	"cloud-core-device-id": "setup-info:cloudCoreDeviceId"
+    		},
+    		"check": {
+    			"result": "ok"
+    		}
+    	}
+    },
+    {
+    	"type": "print",
+    	"name": "print all",
+    	"config": {
+    	}
+    }
+    ]
+}

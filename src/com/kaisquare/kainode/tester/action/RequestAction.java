@@ -1,14 +1,17 @@
 package com.kaisquare.kainode.tester.action;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.kaisquare.utils.AppLogger;
-import com.kaisquare.utils.Utils;
+import com.kaisquare.kaisync.utils.AppLogger;
+import com.kaisquare.kaisync.utils.Utils;
 
 public abstract class RequestAction implements IAction {
 	
@@ -16,7 +19,9 @@ public abstract class RequestAction implements IAction {
 	protected static final String CHECK_IS_DIGIT = ":isdigit";
 	
 	private Map<String, String> mVariables = new HashMap<String, String>();
-	private Pattern pattern = Pattern.compile("(\\{\\{[^\\}]+\\}\\})");
+	private static final Pattern PATTERN_VARIABLE = Pattern.compile("(\\{\\{[^\\}]+\\}\\})");
+	private static final Pattern PATTERN_NOW_DATE = Pattern.compile("\\$now\\(([^\\)]+)\\)", Pattern.CASE_INSENSITIVE);
+	
 	
 	public void setVariables(Map<String, String> variables)
 	{
@@ -43,7 +48,7 @@ public abstract class RequestAction implements IAction {
 	public String parseVariables(String str)
 	{
 		StringBuilder sb = new StringBuilder();
-		Matcher matcher = pattern.matcher(str);
+		Matcher matcher = PATTERN_VARIABLE.matcher(str);
 		int index = 0;
 		while (matcher.find())
 		{
@@ -51,7 +56,8 @@ public abstract class RequestAction implements IAction {
 			int end = matcher.end();
 			sb.append(str.substring(index, start));
 			String name = str.substring(start + 2, end - 2);
-			String var = getVariable(name.toLowerCase());
+			String builtinVar = checkBuiltinVariable(name);
+			String var = builtinVar == null ? getVariable(name.toLowerCase()) : builtinVar;
 			sb.append(var);
 			index = end;
 		}
@@ -59,6 +65,24 @@ public abstract class RequestAction implements IAction {
 			sb.append(str.substring(index, str.length()));
 		
 		return sb.toString();
+	}
+	
+	private String checkBuiltinVariable(String s)
+	{
+		Matcher m;
+		if ((m = PATTERN_NOW_DATE.matcher(s)).find())
+		{
+			String dateFormat = m.group(1);
+			Date now = new Date();
+			if ("timestamp".equalsIgnoreCase(dateFormat))
+				return Long.toString(now.getTime());
+
+			SimpleDateFormat format = new SimpleDateFormat(dateFormat);
+			format.setTimeZone(TimeZone.getTimeZone("UTC"));
+			return format.format(now);
+		}
+		
+		return null;
 	}
 	
 	protected void checkResult(ActionResult result, Map<String, String> check)
@@ -94,14 +118,27 @@ public abstract class RequestAction implements IAction {
 	
 	protected boolean hasCheckRule(String rule, String value)
 	{
-		switch (rule)
+		if (rule.startsWith("re:"))
 		{
-		case CHECK_NOT_EMPTY:
-			return !Utils.isStringEmpty(value);
-		case CHECK_IS_DIGIT:
-			return Utils.isDigitString(value);
-		default:
-			return false;
+			if (rule.length() < 3)
+			{
+				AppLogger.e(this, "error checking pattern: invalid rule '%s'", rule);
+				return false;
+			}
+			String pattern = rule.substring(3);
+			return Pattern.matches(pattern, value);
+		}
+		else
+		{
+			switch (rule)
+			{
+			case CHECK_NOT_EMPTY:
+				return !Utils.isStringEmpty(value);
+			case CHECK_IS_DIGIT:
+				return Utils.isDigitString(value);
+			default:
+				return false;
+			}
 		}
 	}
 

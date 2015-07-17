@@ -1,0 +1,88 @@
+{
+    "actions": [
+    {
+        "type": "argument",
+        "name": "pass parameters",
+        "config": {
+            "data": {
+                "sync-host": "localhost",
+                "sync-port": "5671",
+                "keystore": "mq.jks",
+                "keypass": "kaisquare",
+                // "cloud-platform-device-id": "27",
+                // "cloud-core-device-id": "9",
+                // "mac-address": "11:11:11:11:11:11",
+                "node-version": "4.3.2.1",
+                "vca-version": "2015June30 10h29m42s",
+                "vca-instance-id": "Z7VME7RSLN"
+            }
+        }
+    },
+    {
+    	"type": "kaisync",
+    	"name": "send command",
+    	"config": {
+	    	"count": 1,
+	    	"sync-command": "NODE_UPDATE_INFO",
+	    	"sync-mac-caddress": "{{mac-address}}",
+    		"data": {
+    			"parameters": [ "{\"version\":\"{{node-version}}\",\"vcaVersion\":\"{{vca-version}}\"}" ]
+    		}
+    	}
+    },
+    {
+    	"type": "kaisync",
+    	"name": "send command",
+    	"config": {
+	    	"count": 1,
+	    	"sync-command": "NODE_SYNC_DEVICE",
+	    	"sync-mac-caddress": "{{mac-address}}",
+    		"data": {
+    			"parameters": [ 	"[{\"name\":\"camera1\",\"nodePlatformDeviceId\":\"1\",\"nodeCoreDeviceId\":\"1\",\"model\":{\"modelId\":111,\"name\":\"Amtk IP Camera\",\"channels\":1,\"capabilities\":\"video mjpeg video mjpeg h264\",\"id\":4},\"deviceKey\":\"\",\"host\":\"127.0.0.1\",\"port\":\"80\",\"login\":\"admin\",\"password\":\"\",\"address\":\"Taipei\",\"latitude\":\"0\",\"longitude\":\"0\",\"cloudRecordingEnabled\":true,\"labels\":[]},{\"name\":\"camera2\",\"nodePlatformDeviceId\":\"2\",\"nodeCoreDeviceId\":\"2\",\"model\":{\"modelId\":107,\"name\":\"Axis IP Camera\",\"channels\":1,\"capabilities\":\"video mjpeg video mjpeg h264\",\"id\":61},\"deviceKey\":\"\",\"host\":\"127.0.0.1\",\"port\":\"80\",\"login\":\"root\",\"password\":\"c2Xqvtxpca1UroWh/mT9Tw\\u003d\\u003dwr9zRky/fS9OZ1gU80Ydfw\\u003d\\u003d\",\"address\":\"Taipei\",\"latitude\":\"0\",\"longitude\":\"0\",\"cloudRecordingEnabled\":true,\"labels\":[]}]" ]
+    		}
+    	}
+    },
+    {
+    	"type": "kaisync",
+    	"name": "send command",
+    	"config": {
+	    	"count": 1,
+	    	"sync-command": "NODE_SYNC_VCA",
+	    	"sync-mac-caddress": "{{mac-address}}",
+    		"data": {
+    			"parameters": [ "[{\"instanceId\":\"{{vca-instance-id}}\",\"type\":\"INTRUSION\",\"platformDeviceId\":\"{{cloud-platform-device-id}}\",\"coreDeviceId\":\"{{cloud-core-device-id}}\",\"channelId\":\"1\",\"thresholds\":\"\",\"enabled\":true,\"vcaState\":\"RUNNING\",\"updateRequired\":false,\"_id\":\"55a4af6fe4b083a21b2a405f\",\"_created\":1436856175922,\"_modified\":1437105000794}]" ]
+    		}
+    	}
+    },
+    {
+    	"type": "kaisync",
+    	"name": "send command",
+    	"config": {
+    		"count": 1,
+	    	"sync-command": "NODE_UPDATE_VCA_STATES",
+	    	"sync-mac-caddress": "{{mac-address}}",
+	    	"data": {
+	    		"parameters": [ "{\"{{vca-instance-id}}\": \"RUNNING\"}" ]
+	    	}
+    	}
+    },
+    {
+    	"type": "kaisync",
+    	"name": "send event",
+    	"config": {
+    		"threads": 3,
+	    	"count": 10,
+	    	"sync-event": "1",
+    		"data": {
+    			"data": "",
+    			"type": "event-vca-intrusion",
+    			"time": "{{$now(dd/MM/yyyy HH:mm:ss)}}",
+    			"deviceid": "{{cloud-core-device-id}}",
+    			"channelid": "1",
+    			"binary": "",
+    			"video": "event.mp4"
+    		}
+    	}
+    }
+    ]
+}

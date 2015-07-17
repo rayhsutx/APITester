@@ -15,8 +15,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
-import com.kaisquare.utils.AppLogger;
-import com.kaisquare.utils.Utils;
+import com.kaisquare.kaisync.utils.AppLogger;
+import com.kaisquare.kaisync.utils.Utils;
 
 public final class Configuration {
 	
@@ -35,7 +35,7 @@ public final class Configuration {
 	private static final Configuration mConfig = new Configuration();
 	
 	private Map<String, String> mConfigs;
-	private static final String CONFIG_FILE = "kainode.conf";
+	private static final String CONFIG_FILE = "nodetester.conf";
 	
 	private Configuration() 
 	{
@@ -56,12 +56,12 @@ public final class Configuration {
 		return mConfigs.get(key);
 	}
 	
-	private int getIntegerValue(String name)
+	public int getIntegerValue(String name)
 	{
 		return getIntegerValue(name, 0);
 	}
 	
-	private int getIntegerValue(String name, int defaultValue)
+	public int getIntegerValue(String name, int defaultValue)
 	{
 		String value = mConfigs.get(name);
 		
@@ -116,7 +116,6 @@ public final class Configuration {
 		return mConfig;
 	}
 	
-	@SuppressWarnings("resource")
 	public static Map<String, String> load()
 	{
 		final String TAG = "Configuration";
@@ -145,13 +144,20 @@ public final class Configuration {
 						configs.put(key, config[1].trim());
 					}
 					else
-						AppLogger.e(TAG, "could not parse config: " + config[0]);
+						AppLogger.d(TAG, "could not parse config: " + config[0]);
 				}
 			}
 		} catch (FileNotFoundException e) {
-			AppLogger.e(TAG, "could not find config file.");
+			AppLogger.d(TAG, "could not find config file.");
 		} catch (IOException e) {
 			e.printStackTrace();
+		} finally {
+			if (reader != null)
+			{
+				try {
+					reader.close();
+				} catch (IOException e) {}
+			}
 		}
 		
 		return configs;

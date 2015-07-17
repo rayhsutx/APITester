@@ -27,12 +27,12 @@ public abstract class ActionResult {
 		return new HashMap<String, String>();
 	}
 	
-	protected void putVariable(String name, String value)
+	public void putVariable(String name, String value)
 	{
 		mMappingValues.put(name, value);
 	}
 	
-	protected void putVariableAll(Map<String, String> variables)
+	public void putVariableAll(Map<String, String> variables)
 	{
 		mMappingValues.putAll(variables);
 	}

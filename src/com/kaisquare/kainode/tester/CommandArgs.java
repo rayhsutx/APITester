@@ -3,7 +3,7 @@ package com.kaisquare.kainode.tester;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.kaisquare.utils.Utils;
+import com.kaisquare.kaisync.utils.Utils;
 
 public class CommandArgs
 {

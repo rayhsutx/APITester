@@ -1,10 +1,12 @@
 package com.kaisquare.kainode.tester;
 
+import java.util.Map;
+
 import com.kaisquare.kainode.tester.action.TestActionStatus;
 
 public interface ITester {
 		
-	void doTest() throws Exception;
+	Map<String, String> doTest() throws Exception;
 	
 	TestActionStatus[] getAllStatus();
 

@@ -4,7 +4,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.kaisquare.utils.AppLogger;
+import com.kaisquare.kaisync.utils.AppLogger;
 
 public class PrintTestAction extends RequestAction {
 
@@ -29,6 +29,9 @@ public class PrintTestAction extends RequestAction {
 			AppLogger.i(this, "%s: %s", entry.getKey(), entry.getValue());
 		}
 		
-		return new EmptyActionResult(TestActionStatus.Ok, "", null);
+		EmptyActionResult result = new EmptyActionResult(TestActionStatus.Ok, "", null);
+		result.putVariableAll(map);
+		
+		return result;
 	}
 }

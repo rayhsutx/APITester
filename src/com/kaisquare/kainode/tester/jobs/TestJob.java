@@ -6,6 +6,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 
 import com.google.gson.Gson;
 import com.kaisquare.kainode.tester.ITester;
@@ -15,14 +16,15 @@ import com.kaisquare.kainode.tester.action.RequestAction;
 import com.kaisquare.kainode.tester.action.Actions.ActionNotFoundException;
 import com.kaisquare.kainode.tester.action.TestActionStatus;
 import com.kaisquare.kainode.tester.jobs.JobConfiguration.JobActionConfiguration;
-import com.kaisquare.utils.AppLogger;
+import com.kaisquare.kaisync.utils.AppLogger;
 
 public class TestJob implements ITester {
 	
 	private JobConfiguration mConfig;
 	private TestActionStatus[] mAllStatus;
+	private Map<String, String> defaultVariables;
 
-	public TestJob(String jobFile) throws IOException
+	public TestJob(String jobFile, Map<String, String> defaultVariables) throws IOException
 	{
 		Path path = Paths.get(jobFile);
 		BufferedReader reader = null;
@@ -30,25 +32,28 @@ public class TestJob implements ITester {
 		reader = Files.newBufferedReader(path, Charset.forName("utf8"));
 		mConfig = new Gson().fromJson(reader, JobConfiguration.class);
 		reader.close();
+		
+		this.defaultVariables = defaultVariables;
 	}
 
 	@Override
-	public void doTest() throws Exception {
+	public Map<String, String> doTest() throws Exception {
 		ActionResult result = null;
+		Map<String, String> variables = defaultVariables;
 
 		int success = 0, failed = 0, error = 0;
-		boolean retrying = false;
 		try {
 			if (mConfig.actions.size() > 0)
 			{
 				mAllStatus = new TestActionStatus[mConfig.actions.size()];
 				int n = 0, retry = 0;
-				retrying = false;
 				for (JobActionConfiguration act : mConfig.actions)
 				{
 					RequestAction action = (RequestAction)Actions.create(act.type);
 					if (result != null)
 						action.setVariables(result.getVariables());
+					else if (defaultVariables != null)
+						action.setVariables(defaultVariables);
 					
 					for (;;) {
 						if (act.delay > 0)
@@ -68,7 +73,6 @@ public class TestJob implements ITester {
 								if (act.retry > retry)
 								{
 									retry++;
-									retrying = true;
 									AppLogger.i(this, "retry action '%s' %d/%d", act.name, retry, act.retry);
 									continue;
 								}
@@ -94,6 +98,8 @@ public class TestJob implements ITester {
 						break;
 					default:
 					}
+					
+					variables = result.getVariables();
 				}
 			}
 			else
@@ -113,6 +119,7 @@ public class TestJob implements ITester {
 		}
 		
 		AppLogger.i(this, "Done");
+		return variables;
 	}
 
 	@Override
@@ -122,6 +129,7 @@ public class TestJob implements ITester {
 
 	public static class ActionFailedException extends Exception
 	{
+		private static final long serialVersionUID = 1L;
 
 		public ActionFailedException() {
 			super();

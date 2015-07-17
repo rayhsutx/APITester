@@ -21,8 +21,8 @@ import java.util.concurrent.Future;
 
 import com.google.gson.Gson;
 import com.kaisquare.gson.GsonBuilder;
-import com.kaisquare.utils.AppLogger;
-import com.kaisquare.utils.Utils;
+import com.kaisquare.kaisync.utils.AppLogger;
+import com.kaisquare.kaisync.utils.Utils;
 
 /**
  * KUP API internal request, which handles connection between server and client

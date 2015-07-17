@@ -25,7 +25,6 @@ public class JsonActionResult extends ActionResult {
 			return;
 		
 		Gson gson = new Gson();
-		@SuppressWarnings("unchecked")
 		HashMap<String, Object> jsonMap = gson.fromJson((String)result, MAP_TYPE.getClass());
 		
 		Iterator<Entry<String, String>> iterator = mapping.entrySet().iterator();
@@ -47,7 +46,15 @@ public class JsonActionResult extends ActionResult {
 					if (obj instanceof Map)
 						obj = ((Map<String, Object>)obj).get(s);
 					else if (obj instanceof List)
-						obj = ((List<Object>)obj).get(Integer.parseInt(paths[i]));
+					{
+						List<Object> list = ((List<Object>)obj);
+						int index = 0;
+						if ("$last".equalsIgnoreCase(s))
+							index = list.size() - 1;
+						else
+							index = Integer.parseInt(s);
+						obj = list.get(index);
+					}
 					else
 						break;
 					

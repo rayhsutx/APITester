@@ -8,8 +8,8 @@ import java.util.Map;
 import org.apache.log4j.PropertyConfigurator;
 
 import com.kaisquare.kainode.tester.jobs.TestJob;
-import com.kaisquare.utils.AppLogger;
-import com.kaisquare.utils.Utils;
+import com.kaisquare.kaisync.utils.AppLogger;
+import com.kaisquare.kaisync.utils.Utils;
 
 public class KaiNodeTester {
 
@@ -34,15 +34,17 @@ public class KaiNodeTester {
 		}
 		
 		String[] files = value.split("\\,");
+		Map<String, String> variables = null;
 		for (String file : files)
 		{
 			AppLogger.i("", "Starting test from %s", file.trim());
 			TestJob tester;
 			try {
-				tester = new TestJob(file.trim());
-				tester.doTest();
+				tester = new TestJob(file.trim(), variables);
+				variables = tester.doTest();
 			} catch (Exception e) {
 				AppLogger.e("", e, "failed to run test '%s'", file);
+				break;
 			}
 		}
 	}
