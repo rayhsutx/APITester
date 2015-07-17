@@ -16,6 +16,10 @@ public abstract class ActionResult {
 		mMappingValues = createMappingObject();
 	}
 	
+	/**
+	 * Parse the result and put the values which are from result into variables for next action 
+	 * @param mapping specify variable in the result 
+	 */
 	public void parseResult(Map<String, String> mapping)
 	{
 		if (mStatus == TestActionStatus.Ok)
@@ -27,11 +31,20 @@ public abstract class ActionResult {
 		return new HashMap<String, String>();
 	}
 	
+	/**
+	 * Put a variable
+	 * @param name name of the variable
+	 * @param value the actual value 
+	 */
 	public void putVariable(String name, String value)
 	{
 		mMappingValues.put(name, value);
 	}
 	
+	/**
+	 * Put all variable
+	 * @param variables
+	 */
 	public void putVariableAll(Map<String, String> variables)
 	{
 		mMappingValues.putAll(variables);
