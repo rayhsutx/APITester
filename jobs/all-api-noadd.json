@@ -1,0 +1,358 @@
+{
+    "actions": [
+    {
+        "type": "argument",
+        "name": "pass parameters",
+        "config": {
+            "data": {
+            	"cloud-host": "up.uat.kaisquare.com",
+                "host": "192.168.1.93",
+                "port": "80",
+                "sync-host": "192.168.1.93",
+                "sync-port": "5672",
+                "bucketname": "kaisquare",
+                "otp": "SGMEEP",
+                "license": "XUHZS - CVP8F - UMJIW",
+                "registration-number": "THF10P130531800076",
+                "node-name": "Node TW 76",
+                "dev-name": "Axis119",
+                "dev-host": "192.168.1.119",
+                "dev-port": "80",
+                "dev-user": "root",
+                "dev-password": "pass",
+                "event-date-from": "20077015160000",
+                "event-date-to": "21077015155959",
+                "username": "admin",
+                "userpass": "admin",
+                "core-device-id": "2"
+            }
+        }
+    },
+    {
+        "type": "http",
+        "name": "login",
+        "config": {
+            "url": "http://{{HOST}}:{{PORT}}/api/{{bucketname}}/login",
+            "data": {
+                "user-name": "{{username}}",
+                "password": "{{userpass}}"
+            },
+            "values": {
+            	"result": "result",
+                "session-key": "session-key",
+                "userid": "user-id"
+            },
+	        "check": {
+	        	"result": "ok"
+	        }
+        }
+    },
+    {
+        "type": "http",
+        "name": "getuserdevices",
+        "repeat": 0,
+        "config": {
+            "url": "http://{{HOST}}:{{PORT}}/api/{{bucketname}}/getuserdevices",
+            "data": {
+                "session-key": "{{session-key}}"
+            },
+            "values": {
+            	"result": "result",
+            	"platform-device-id": "devices:0:deviceId"
+            },
+	        "check": {
+	        	"result": "ok"
+	        }
+        }
+    },
+    {
+    	"type": "http",
+    	"name": "getlivevideourl",
+    	"ignoreError": true,
+    	"repeat": 0,
+    	"config": {
+    		"url": "http://{{HOST}}:{{PORT}}/api/{{bucketname}}/getlivevideourl",
+    		"data": {
+    			"session-key": "{{session-key}}",
+    			"device-id": "{{platform-device-id}}",
+    			"channel-id": "0",
+    			"stream-type": "rtmp/h264"
+    		},
+    		"values": {
+    			"result": "result",
+    			"video-url": "url:0"
+    		},
+    		"check": {
+    			"result": "ok"
+    		}
+    	}
+    },
+    {
+    	"type": "http",
+    	"name": "getplaybackvideourl",
+    	"ignoreError": true,
+    	"config": {
+    		"url": "http://{{HOST}}:{{PORT}}/api/{{bucketname}}/getplaybackvideourl",
+    		"data": {
+    			"session-key": "{{session-key}}",
+    			"device-id": "{{platform-device-id}}",
+    			"channel-id": "0",
+    			"stream-type": "rtmp/h264",
+    			"from": "{{event-date-from}}",
+    			"to": "{{event-date-to}}"
+    		},
+    		"values": {
+    			"result": "result",
+    			"recorded-video-url": "url:0"
+    		},
+    		"check": {
+    			"result": "ok"
+    			// "recorded-video-url": ":notempty"
+    		}
+    	}
+    },
+    {
+    	"type": "http",
+    	"name": "keepalive",
+    	"config": {
+    		"url": "http://{{HOST}}:{{PORT}}/api/{{bucketname}}/keepalive",
+    		"data": {
+    			"session-key": "{{session-key}}"
+    		},
+    		"values": {
+    			"result": "result"
+    		},
+    		"check": {
+    			"result": "ok"
+    		}
+    	}
+    },
+    {
+    	"type": "http",
+    	"name": "getuserdevicesbyuserid",
+    	"config": {
+    		"url": "http://{{HOST}}:{{PORT}}/api/{{bucketname}}/getuserdevicesbyuserid",
+    		"data": {
+    			"session-key": "{{session-key}}",
+    			"user-id": "{{userid}}"
+    		},
+    		"values": {
+    			"result": "result"
+    		},
+    		"check": {
+    			"result": "ok"
+    		}
+    	}
+    },
+    {
+    	"type": "http",
+    	"name": "getbucketdevicelabels",
+    	"config": {
+    		"url": "http://{{HOST}}:{{PORT}}/api/{{bucketname}}/getbucketdevicelabels",
+    		"data": {
+    			"session-key": "{{session-key}}"
+    		},
+    		"values": {
+    			"result": "result"
+    		},
+    		"check": {
+    			"result": "ok"
+    		}
+    	}
+    },
+    {
+    	"type": "http",
+    	"name": "updatedevice",
+    	"config": {
+    		"url": "http://{{HOST}}:{{PORT}}/api/{{bucketname}}/updatedevice",
+    		"data": {
+    			"session-key": "{{session-key}}",
+		        "device-id": "{{platform-device-id}}",
+		        "device-name": "{{dev-name}}-updated",
+		        "model-id": "107",
+		        "device-key": "",
+		        "device-host": "{{dev-host}}",
+		        "device-port": "{{dev-port}}",
+		        "device-label": "",
+		        "device-login": "{{dev-user}}",
+		        "device-password": "{{dev-password}}",
+		        "device-address": "Taipei",
+		        "device-latitude": "0",
+		        "device-longitude": "0",
+		        "cloud-recording-enabled": "true"
+    		},
+	    	"values": {
+	    		"result": "result"
+	    		// "platform-device-id": "id",
+	    		// "core-device-id": "device-id"
+	    	},
+	    	"check": {
+	    		"result": "ok"
+	    		// "platform-device-id": ":isdigit",
+	    		// "core-device-id": ":isdigit"
+	    	}
+    	}
+    },
+    {
+    	"type": "http",
+    	"name": "updatedevice back",
+    	"ignoreError": true,
+    	"config": {
+    		"url": "http://{{HOST}}:{{PORT}}/api/{{bucketname}}/updatedevice",
+    		"data": {
+    			"session-key": "{{session-key}}",
+		        "device-id": "{{platform-device-id}}",
+		        "device-name": "{{dev-name}}",
+		        "model-id": "107",
+		        "device-key": "",
+		        "device-host": "{{dev-host}}",
+		        "device-port": "{{dev-port}}",
+		        "device-label": "",
+		        "device-login": "{{dev-user}}",
+		        "device-password": "{{dev-password}}",
+		        "device-address": "Taipei",
+		        "device-latitude": "0",
+		        "device-longitude": "0",
+		        "cloud-recording-enabled": "true"
+    		},
+	    	"values": {
+	    		"result": "result"
+	    	},
+	    	"check": {
+	    		"result": "ok"
+	    	}
+    	}
+    },
+    {
+    	"type": "http",
+    	"name": "removedeviceuser",
+    	"config": {
+    		"url": "http://{{HOST}}:{{PORT}}/api/{{bucketname}}/removedeviceuser",
+    		"data": {
+    			"session-key": "{{session-key}}",
+    			"device-id": "{{platform-device-id}}",
+        		"user-id": "{{userid}}"
+    		},
+    		"values": {
+    			"result": "result"
+    		},
+    		"check": {
+    			"result": "ok"
+    		}
+    	}
+    },
+    {
+    	"type": "http",
+    	"name": "adddeviceuser",
+    	"config": {
+    		"url": "http://{{HOST}}:{{PORT}}/api/{{bucketname}}/adddeviceuser",
+    		"data": {
+    			"session-key": "{{session-key}}",
+    			"device-id": "{{platform-device-id}}",
+        		"user-id": "{{userid}}"
+    		},
+    		"values": {
+    			"result": "result"
+    		},
+    		"check": {
+    			"result": "ok"
+    		}
+    	}
+    },
+    {
+    	"type": "http",
+    	"name": "getdashboard",
+    	"config": {
+    		"url": "http://{{HOST}}:{{PORT}}/api/{{bucketname}}/getdashboard",
+    		"data": {
+    			"session-key": "{{session-key}}",
+		        "days": "3"
+    		},
+	    	"values": {
+	    		"result": "result"
+	    	},
+	    	"check": {
+	    		"result": "ok"
+	    	}
+    	}
+    },
+    {
+    	"type": "http",
+    	"name": "getalerts",
+    	"config": {
+    		"url": "http://{{HOST}}:{{PORT}}/api/{{bucketname}}/getalerts",
+    		"data": {
+    			"session-key": "{{session-key}}",
+		        "from": "{{event-date-from}}",
+		        "to": "{{event-date-to}}",
+		        "take": "15"
+    		},
+	    	"values": {
+	    		"result": "result"
+	    	},
+	    	"check": {
+	    		"result": "ok"
+	    	}
+    	}
+    },
+    {
+    	"type": "http",
+    	"name": "getanalyticsreport",
+    	"config": {
+    		"url": "http://{{HOST}}:{{PORT}}/api/{{bucketname}}/getanalyticsreport",
+    		"data": {
+    			"session-key": "{{session-key}}",
+		        "from": "{{event-date-from}}",
+		        "to": "{{event-date-to}}",
+		        "deviceId": "{{platform-device-id}}",
+		        "channel-id": "0",
+		        "event-type": "event-vca-traffic"
+    		},
+	    	"values": {
+	    		"result": "result"
+	    	},
+	    	"check": {
+	    		"result": "ok"
+	    	}
+    	}
+    },
+	{
+    	"type": "kaisync",
+    	"name": "send event",
+    	"config": {
+    		"threads": 1,
+	    	"count": 100,
+	    	"sync-event": "1",
+    		"data": {
+    			"data": "",
+    			"type": "event-connected",
+    			"time": "{{$now(dd/MM/yyyy HH:mm:ss)}}",
+    			"deviceid": "{{core-device-id}}",
+    			"channelid": "0",
+    			"binary": ""
+    		}
+    	}
+    },
+    {
+    	"type": "http",
+    	"name": "logout",
+    	"config": {
+    		"url": "http://{{host}}:{{port}}/api/{{bucketname}}/logout",
+    		"data": {
+    			"session-key": "{{session-key}}"
+    		},
+    		"values": {
+    			"result": "result"
+    		},
+    		"check": {
+    			"result": "ok"
+    		}
+    	}
+    },
+    {
+        "type": "print",
+        "name": "print variables",
+        "config": {
+        }
+    }]
+}

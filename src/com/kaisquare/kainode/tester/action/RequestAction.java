@@ -47,6 +47,9 @@ public abstract class RequestAction implements IAction {
 	
 	public String parseVariables(String str)
 	{
+		if (Utils.isStringEmpty(str))
+			return str;
+		
 		StringBuilder sb = new StringBuilder();
 		Matcher matcher = PATTERN_VARIABLE.matcher(str);
 		int index = 0;

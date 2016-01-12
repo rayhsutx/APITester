@@ -9,8 +9,10 @@ import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -21,13 +23,18 @@ import org.apache.commons.codec.binary.Base64;
 import com.kaisquare.kaisync.ISyncFile;
 import com.kaisquare.kaisync.KAISync;
 import com.kaisquare.kaisync.platform.Command;
+import com.kaisquare.kaisync.platform.CommandClient;
+import com.kaisquare.kaisync.platform.ICommandReceivedListener;
 import com.kaisquare.kaisync.platform.IPlatformSync;
 import com.kaisquare.kaisync.platform.MessagePacket;
 import com.kaisquare.kaisync.transport.PThreadFactory;
 import com.kaisquare.kaisync.utils.AppLogger;
 import com.kaisquare.kaisync.utils.Utils;
 
-public class KAISyncAction extends RequestAction {
+public class KAISyncAction extends RequestAction implements ICommandReceivedListener {
+	
+	private ConcurrentHashMap<String, String> sentCommands;
+	private IPlatformSync platformSync = null;
 
 	@Override
 	public String getActionName() {
@@ -42,15 +49,19 @@ public class KAISyncAction extends RequestAction {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public ActionResult submit(ActionConfiguration config) {
+		TestActionStatus resultStatus = TestActionStatus.Ok;
 		String host = getVariable("sync-host");
 		int port = Integer.parseInt(getVariable("sync-port"));
 		String keystore = getVariable("keystore");
 		String keypass = getVariable("keypass");
 		String nodeId = getVariable("cloud-platform-device-id");
-		IPlatformSync platformSync = null;
+		CommandClient cmdClient = null;
 		
-		if (Utils.isStringEmpty(nodeId))
-			throw new NullPointerException("empty 'cloud-platform-device-id'");
+		config.syncCommand = parseVariables(config.syncCommand);
+		config.syncMacAddress = parseVariables(config.syncMacAddress);
+		config.syncEvent = parseVariables(config.syncEvent);
+		config.syncEventVideo = parseVariables(config.syncEventVideo);
+		
 		if (Utils.isStringEmpty(host))
 			throw new NullPointerException("empty 'sync-host'");
 		
@@ -61,19 +72,31 @@ public class KAISyncAction extends RequestAction {
 			return new EmptyActionResult(TestActionStatus.Error);
 		}
 		try {
+			if (config.bindCommand)
+				cmdClient = bindCommand(platformSync, nodeId, config.syncMacAddress, config.timeout);
+			
 			if (!Utils.isStringEmpty(config.syncCommand))
 			{
+				if (Utils.isStringEmpty(nodeId))
+					throw new NullPointerException("empty 'cloud-platform-device-id'");
+				
+				sentCommands = new ConcurrentHashMap<>(config.count);
+				if (config.waitCommand && cmdClient == null)
+					cmdClient = bindCommand(platformSync, nodeId, config.syncMacAddress, config.timeout);
+				
 				List<String> parameters = (List<String>) config.data.get("parameters");
-				Command command = new Command(UUID.randomUUID().toString(), config.syncCommand, "");
-				if (parameters != null && !parameters.isEmpty())
-				{
-					for (String p : parameters)
-						command.getParameters().add(parseVariables(p));
-				}
-				List<Command> list = Arrays.asList(command);
 				for (int i = 0; i < config.count; i++)
 				{
-					AppLogger.i(this, "send command (%d): %s", (i + 1), platformSync.sendCommands(nodeId, config.syncMacAddress, list));					
+					Command command = new Command(UUID.randomUUID().toString(), config.syncCommand, "");
+					if (parameters != null && !parameters.isEmpty())
+					{
+						for (String p : parameters)
+							command.getParameters().add(parseVariables(p));
+					}
+					List<Command> list = Arrays.asList(command);
+
+					sentCommands.put(command.getId(), command.getCommand());
+					AppLogger.i(this, "send command (%d:%s): %s", (i + 1), config.syncCommand, platformSync.sendCommands(nodeId, config.syncMacAddress, list));					
 				}
 			}
 			if (!Utils.isStringEmpty(config.syncEvent))
@@ -142,12 +165,92 @@ public class KAISyncAction extends RequestAction {
 				}
 			}
 		} finally {
+			if (cmdClient != null)
+			{
+				if (config.waitCommand)
+				{
+					long start = System.currentTimeMillis();
+					AppLogger.i(this, "waiting for command response (remaining %d)", sentCommands.size());
+					while (sentCommands.size() > 0)
+					{
+						try {
+							Thread.sleep(config.commandTimeout > 1000 ? 1000 : config.commandTimeout);
+						} catch (InterruptedException e) {
+							break;
+						}
+						if (sentCommands.size() > 0 && System.currentTimeMillis() - start >= config.commandTimeout)
+						{
+							AppLogger.w(this, "wait for commands timeout (%s-%s)", nodeId, config.syncMacAddress);
+							Entry[] items = sentCommands.entrySet().toArray(new Entry[0]);
+							AppLogger.i(this, "----no response commands----");
+							for (Entry item : items)
+							{
+								AppLogger.i(this, "%s > %s", item.getKey(), item.getValue());
+							}
+							AppLogger.i(this, "----------------------------");
+							resultStatus = TestActionStatus.Failed;
+							break;
+						}
+					}
+				}
+				if (config.bindCommand)
+				{
+					try {
+						Thread.sleep(config.timeout);
+					} catch (InterruptedException e) {
+					}
+				}
+				cmdClient.close();
+			}
 			platformSync.close();
 		}
-		EmptyActionResult result = new EmptyActionResult(TestActionStatus.Ok);
+		EmptyActionResult result = new EmptyActionResult(resultStatus);
 		result.putVariableAll(getVariables());
 		
 		return result;
+	}
+
+	private CommandClient bindCommand(IPlatformSync platformSync, String nodeId, String syncMacAddress, int timeout) {
+		CommandClient cmdClient = null;
+		try {
+			cmdClient = platformSync.bindCommands(nodeId, syncMacAddress, this);
+			cmdClient.start();
+			cmdClient.awaitReady(timeout);
+		} catch (Exception e) {
+			if (cmdClient != null) cmdClient.close();
+			throw new RuntimeException("unable to bind command " + nodeId + "-" + syncMacAddress);
+		}
+		
+		return cmdClient;
+	}
+
+	@Override
+	public void onCommandReceived(String identifier, String macAddress, List<Command> commands) {
+		for (Command cmd : commands)
+		{
+			try {
+				if (!Utils.isStringEmpty(cmd.getOriginalId()))
+				{
+					AppLogger.i(this, "recv %s: %s=%s",
+							cmd.getOriginalId(),
+							cmd.getCommand(),
+							cmd.getParameters().get(0));
+					
+					sentCommands.remove(cmd.getOriginalId());
+				}
+				else
+				{
+					AppLogger.i(this, "received cloud command %s", cmd.getCommand());
+					Command response = new Command(UUID.randomUUID().toString(), cmd.getCommand(), cmd.getOriginalId());
+					response.getParameters().add("Success");
+					AppLogger.i(this, "reply '%s': %s",
+							cmd.getCommand(),
+							platformSync.sendCommands(identifier, macAddress, Arrays.asList(response)));
+				}
+			} catch (Exception e) {
+				AppLogger.e(this, e, "");
+			}
+		}
 	}
 	
 	static class EventVideoFileUpload implements Callable<String>

@@ -26,6 +26,12 @@ public class ActionConfiguration {
 	public String syncEventVideo;
 	@SerializedName("sync-command")
 	public String syncCommand;
+	@SerializedName("bind-command")
+	public boolean bindCommand;
+	@SerializedName("wait-command")
+	public boolean waitCommand;
+	@SerializedName("wait-timeout")
+	public int commandTimeout;
 	@SerializedName("sync-mac-caddress")
 	public String syncMacAddress;
 	public int threads;

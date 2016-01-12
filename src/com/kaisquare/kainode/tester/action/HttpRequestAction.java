@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import com.kaisquare.kaisync.utils.AppLogger;
@@ -40,12 +41,17 @@ public class HttpRequestAction extends RequestAction {
 		
 		try {
 			conn = (HttpURLConnection) new URL(url).openConnection();
+			AppLogger.i(this, "url : %s", url);
 			byte[] postBytes = getPostData(config); 
 			conn.setUseCaches(false);
-			conn.setDoOutput(true);
 			conn.setRequestMethod(config.method);
 			conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded;");
-			conn.setRequestProperty("Content-Length", Integer.toString(postBytes.length));
+			conn.setRequestProperty("Connection", "close");
+			if (postBytes.length > 0)
+			{
+				conn.setRequestProperty("Content-Length", Integer.toString(postBytes.length));
+				conn.setDoOutput(true);
+			}
 			AppLogger.d(this, "set connect timeout: %s", config.timeout);
 			conn.setConnectTimeout(config.timeout);
 			
@@ -60,10 +66,22 @@ public class HttpRequestAction extends RequestAction {
 				}
 				conn.setRequestProperty("Cookie", sbCookie.toString());
 			}
-
-			AppLogger.i(this, "connect %s", url);
-			os = conn.getOutputStream();
-			os.write(postBytes);
+			
+			conn.connect();
+			AppLogger.i(this, "connected %s", url);
+//			if(!conn.getDoOutput()){
+//				conn.setDoOutput(true);
+//			}
+			
+			
+			if(postBytes.length > 0){
+				os = conn.getOutputStream();
+				os.write(postBytes);
+				os.flush();
+				os.close();
+			}
+			
+			
 			
 			in = new BufferedInputStream(conn.getInputStream());			
 			byte[] b = new byte[8192];
@@ -81,6 +99,7 @@ public class HttpRequestAction extends RequestAction {
 			String cookie = conn.getHeaderField("Set-Cookie");
 			if (!Utils.isStringEmpty(cookie))
 			{
+				COOKIES.clear();
 				cookie = cookie.split("\\;", 2)[0];
 				if (!COOKIES.contains(cookie))
 					COOKIES.add(cookie);
@@ -90,7 +109,7 @@ public class HttpRequestAction extends RequestAction {
 			result = new JsonActionResult(TestActionStatus.Ok, sbResult.toString());
 			result.putVariableAll(getVariables());
 			result.putVariable("__COOKIE__", cookie);
-			result.parseResult(config.values);
+			result.parseResult(parseVariables(config.values));
 			
 			checkResult(result, config.check);			
 		} catch (Exception e) {
@@ -117,6 +136,20 @@ public class HttpRequestAction extends RequestAction {
 		}
 		
 		return result;
+	}
+
+	@SuppressWarnings("unchecked")
+	protected Map<String, String> parseVariables(Map<String, String> values) {
+		if (values != null)
+		{
+			Entry<String, String>[] entries = values.entrySet().toArray(new Entry[0]);
+			for (Entry<String, String> e : entries)
+			{
+				values.put(e.getKey(), parseVariables(e.getValue()));
+			}
+		}
+		
+		return values;
 	}
 
 	private byte[] getPostData(ActionConfiguration config) {

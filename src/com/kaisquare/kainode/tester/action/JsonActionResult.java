@@ -53,7 +53,10 @@ public class JsonActionResult extends ActionResult {
 							index = list.size() - 1;
 						else
 							index = Integer.parseInt(s);
-						obj = list.get(index);
+						if (list.size() > index)
+							obj = list.get(index);
+						else
+							obj = null;
 					}
 					else
 						break;
@@ -70,6 +73,9 @@ public class JsonActionResult extends ActionResult {
 	}
 
 	private String formatValue(Object obj) {
+		if (obj == null)
+			return null;
+		
 		String value;
 		if (obj instanceof Double)
 		{

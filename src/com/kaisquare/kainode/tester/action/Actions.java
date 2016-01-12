@@ -24,6 +24,7 @@ public final class Actions {
 			return new ShellExecuteAction();
 		case ACTION_KAISYNC:
 			return new KAISyncAction();
+
 		default:
 			throw new ActionNotFoundException("action '" + action + "' not found");
 		}
