@@ -27,6 +27,8 @@ public class APITester {
 	public static ArrayList<String> failed = new ArrayList<String>();
 	public static ArrayList<String> untested = new ArrayList<String>();	
 	public static HashMap<String, String[]> results = new HashMap<String, String[]>();
+	public static HashMap<String, String> dataInput = new HashMap<String, String>();
+	public static boolean dataIn = false;
 	private static Date timeStart;
 	private static Date timeEnd;
 	public static XMLBuilder xmlBuilder;
@@ -77,8 +79,24 @@ public class APITester {
 		ArrayList<String> fileList = new ArrayList<String>(); 
 		String pathTestSuite = Configuration.getConfig().getConfigValue(Configuration.TEST_SUITE);
 		String pathTestCase = Configuration.getConfig().getConfigValue(Configuration.TEST_CASE);
+		String dataVariables = Configuration.getConfig().getConfigValue(Configuration.VARIABLES);
+		System.out.println(dataVariables);
 		String[] files = null;
 		if(!Utils.isStringEmpty(pathTestSuite) || !Utils.isStringEmpty(pathTestCase)){
+			
+			if(!Utils.isStringEmpty(dataVariables)){
+				String[] data = dataVariables.split("\\,");
+				AppLogger.i("", "Data found", "");
+				for(String d : data){
+					
+					String[] keyvalue = d.split("\\:");
+					dataInput.put(keyvalue[0], keyvalue[1]);
+					
+				}
+				dataIn = true;
+			}
+			
+			
 			for(int i = 0; i < args.length; i+= 2){
 				if (args[i].equals("--test-suite")){
 					
@@ -173,6 +191,7 @@ public class APITester {
 	
 	private static void runTest(String[] files, Configuration config, String type){
 		
+		boolean dataAdded = false;
 		boolean breakLoop = false;
 		Element testType = xmlBuilder.createChildElement("test");
 		Element testTypeName = xmlBuilder.createChildElement("name");
@@ -193,6 +212,11 @@ public class APITester {
 				AppLogger.i("", "Starting test from %s", file.trim());
 				TestJob tester;
 				try {
+					
+					if(!dataInput.isEmpty()){
+						variables = dataInput;
+						AppLogger.i("", "data transferrred","");
+					}
 					tester = new TestJob(file.trim(), variables);
 					variables = tester.doTest(fileElement);
 					if (!config.hasConfig(Configuration.IGNORE_FAIL) && (tester.getErrors() > 0 || tester.getFailure() > 0))
@@ -324,6 +348,8 @@ public class APITester {
 		
 		return difference;
 	}
+	
+	
 	
 
 }

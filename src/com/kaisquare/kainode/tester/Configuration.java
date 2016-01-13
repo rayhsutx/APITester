@@ -28,6 +28,7 @@ public final class Configuration {
 	public static final String IGNORE_FAIL = "--ignore-fail";
 	public static final String REPEAT = "--repeat";
 	public static final String TEST_CASE = "--test-case";
+	public static final String VARIABLES = "--d";
 
 	public static void usage()
 	{
@@ -36,6 +37,7 @@ public final class Configuration {
 		System.out.println("Usage:");
 		System.out.printf("%s   \t%s\n", TEST_CASE, "test case of file should be (/test/case.json,/test/case2.json)");
 		System.out.printf("%s   \t%s\n", TEST_SUITE, "directory of TestSuite should be (/path/to/testsuite)");
+		System.out.printf("%s  \t%s\n", VARIABLES, "variables for the test case/suite (key1:value1,key2:value2)");
 		System.out.printf("%s   \t%s\n", IGNORE_FAIL, "ignore jobs if it's failed to the job");
 		System.out.printf("%s   \t%s\n", REPEAT, "repeat all the jobs");
 		System.out.println();
@@ -58,6 +60,14 @@ public final class Configuration {
 		name = xmlBuilder.createChildElement("name"); 
 		String testcase = TEST_CASE + " test case of file should be (/test/case.json)";
 		name = xmlBuilder.writeContent(name, new String[]{testcase});
+		xmlBuilder.writeElements(command, name);
+		xmlBuilder.writeElements(commands, command);
+		xmlBuilder.writeToRoot(commands);
+		
+		command = xmlBuilder.createChildElement("command");
+		name = xmlBuilder.createChildElement("name");
+		String variable = VARIABLES + " variables for the test case/suite (key1:value1,key2:value2)";
+		name = xmlBuilder.writeContent(name, new String[]{variable});
 		xmlBuilder.writeElements(command, name);
 		xmlBuilder.writeElements(commands, command);
 		xmlBuilder.writeToRoot(commands);

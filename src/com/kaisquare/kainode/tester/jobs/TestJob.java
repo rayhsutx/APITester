@@ -6,6 +6,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -13,8 +14,8 @@ import java.util.Map.Entry;
 import org.w3c.dom.Element;
 
 import com.google.gson.Gson;
-import com.kaisquare.kainode.tester.ITester;
 import com.kaisquare.kainode.tester.APITester;
+import com.kaisquare.kainode.tester.ITester;
 import com.kaisquare.kainode.tester.action.ActionResult;
 import com.kaisquare.kainode.tester.action.Actions;
 import com.kaisquare.kainode.tester.action.Actions.ActionNotFoundException;
@@ -76,7 +77,7 @@ public class TestJob implements ITester {
 					RequestAction action = (RequestAction)Actions.create(act.type);
 					if (result != null)
 						action.setVariables(result.getVariables());
-					else if (defaultVariables != null)
+					else if (!defaultVariables.isEmpty())
 						action.setVariables(defaultVariables);
 					
 					int repeat = 0;
@@ -241,5 +242,12 @@ public class TestJob implements ITester {
 	public Map<String, String> doTest() throws Exception {
 		// TODO Auto-generated method stub
 		return null;
+	}
+	
+	public void setVariables(HashMap<String, String> data){
+		
+		for(String key : data.keySet()){
+			defaultVariables.put(key.toLowerCase(), data.get(key));
+		}
 	}
 }

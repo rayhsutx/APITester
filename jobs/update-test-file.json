@@ -6,8 +6,6 @@
         "config": {
             "data": {
             	"cloud-host": "up.uat.kaisquare.com",
-                "host": "192.168.1.93",
-                "port": "80",
                 "sync-host": "192.168.1.93",
                 "sync-port": "5672",
                 "bucketname": "kaisquare",
