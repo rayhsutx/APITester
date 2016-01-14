@@ -4,6 +4,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.kaisquare.kaisync.utils.AppLogger;
+
 public class ArgumentDeliveryAction extends RequestAction {
 
 	@Override
@@ -20,8 +22,8 @@ public class ArgumentDeliveryAction extends RequestAction {
 	public ActionResult submit(ActionConfiguration config) {
 		ArgumentDeliveryActionResult result = new ArgumentDeliveryActionResult(TestActionStatus.Ok, config.data);
 		result.putVariableAll(getVariables());
-		result.parseResult(config.values);
-		
+		result.parseResult(parseVariables(config.values));
+		AppLogger.i("", "Arguments parsed", "");
 		return result;
 	}
 
@@ -50,5 +52,19 @@ public class ArgumentDeliveryAction extends RequestAction {
 			
 		}
 		
+	}
+	
+	@SuppressWarnings("unchecked")
+	protected Map<String, String> parseVariables(Map<String, String> values) {
+		if (values != null)
+		{
+			Entry<String, String>[] entries = values.entrySet().toArray(new Entry[0]);
+			for (Entry<String, String> e : entries)
+			{
+				values.put(e.getKey(), parseVariables(e.getValue()));
+			}
+		}
+		
+		return values;
 	}
 }

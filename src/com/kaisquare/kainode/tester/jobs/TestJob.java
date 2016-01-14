@@ -55,7 +55,7 @@ public class TestJob implements ITester {
 		
 		ActionResult result = null;
 		Map<String, String> variables = defaultVariables;
-
+		int i = 0;
 		double totalSpent = 0;
 		try {
 			if (mConfig.actions.size() > 0)
@@ -80,10 +80,13 @@ public class TestJob implements ITester {
 					else if (!defaultVariables.isEmpty())
 						action.setVariables(defaultVariables);
 					
+					
 					int repeat = 0;
 					long start, end;
 					double spent;
 					for (;;) {
+						if(!defaultVariables.isEmpty() && i == 1)
+							action.setVariables(defaultVariables);
 						if (act.delay > 0)
 						{
 							AppLogger.i(this, "delay starting action '%s' in %d ms", act.name, act.delay);
@@ -113,6 +116,7 @@ public class TestJob implements ITester {
 								printVariables(action.getVariables());
 								throw new ActionFailedException("action '" + act.name + "' failed");
 							}
+							i++;
 						} catch (Exception e) {
 							if (!act.ignoreError) throw e;
 						}
