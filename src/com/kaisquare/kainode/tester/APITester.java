@@ -215,8 +215,9 @@ public class APITester {
 					
 					if(!dataInput.isEmpty()){
 						variables = dataInput;
-						AppLogger.i("", "data transferrred","");
 					}
+					else
+						variables = new HashMap<String, String>();
 					tester = new TestJob(file.trim(), variables);
 					variables = tester.doTest(fileElement);
 					if (!config.hasConfig(Configuration.IGNORE_FAIL) && (tester.getErrors() > 0 || tester.getFailure() > 0))
