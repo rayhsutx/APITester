@@ -1,6 +1,8 @@
 package com.kaisquare.kainode.tester.jobs;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -67,6 +69,10 @@ public class XMLBuilder {
 	
 	public Element writeContent (Element element, String[] text){
 		String content = "";
+		if(element.getTextContent() != null){
+			content = element.getTextContent();
+		}
+		
 		if(text.length > 1){
 			for(int i = 0; i < text.length; i ++){
 				
@@ -84,119 +90,33 @@ public class XMLBuilder {
 		
 		return element;
 	}
-	public void createXML(){
+	public Element writeCommands (Element element, String[] text){
+		String content = "";
+		if(element.getTextContent() != null){
+			content = element.getTextContent();
+		}
 		
-		Element root = document.createElement("bookstore");
-		document.appendChild(root);
+		if(text.length > 1){
+			for(int i = 0; i < text.length; i ++){
+				
+				if(i == text.length-1){
+					content += text[i];
+				}else{
+					content += text[i] + " ";
+				}
+				
+			}
+			element.setTextContent(content);
+		}else{
+			element.setTextContent(text[0]);
+		}
 		
-		Element bookElement = document.createElement("book");
-		bookElement.setAttribute("ISBN", "0123456001");
-		
-		Element titleElement = document.createElement("title");
-		titleElement.setTextContent("Java for Dummies");
-		bookElement.appendChild(titleElement);
-		
-		Element authorElement = document.createElement("author");
-		authorElement.setTextContent("Tan Ah Teck");
-		bookElement.appendChild(authorElement);
-		
-		Element categoryElement = document.createElement("category");
-		categoryElement.setTextContent("Programming");
-		bookElement.appendChild(categoryElement);
-		
-		Element yearElement = document.createElement("year");
-		yearElement.setTextContent("2009");
-		bookElement.appendChild(yearElement);
-		
-		Element editionElement = document.createElement("edition");
-		editionElement.setTextContent("7");
-		bookElement.appendChild(editionElement);
-		
-		Element priceElement = document.createElement("price");
-		priceElement.setTextContent("19.99");
-		bookElement.appendChild(priceElement);
-		
-		root.appendChild(bookElement);
-
-		bookElement = document.createElement("book");
-		bookElement.setAttribute("ISBN","0123456002");
-		
-		titleElement = document.createElement("title");
-		titleElement.setTextContent("More Java for Dummies");
-		bookElement.appendChild(titleElement);
-		
-		
-		authorElement = document.createElement("author");
-		authorElement.setTextContent("Tan Ah Teck");
-		bookElement.appendChild(authorElement);
-
-		categoryElement = document.createElement("category");
-		categoryElement.setTextContent("Programming");
-		bookElement.appendChild(categoryElement);
-		
-		yearElement = document.createElement("year");
-		yearElement.setTextContent("2009");
-		bookElement.appendChild(yearElement);
-		
-		priceElement = document.createElement("price");
-		priceElement.setTextContent("25.99");
-		bookElement.appendChild(priceElement);
-
-		root.appendChild(bookElement);
-		
-		bookElement = document.createElement("book");
-		bookElement.setAttribute("ISBN","0123456010");
-		
-		titleElement = document.createElement("title");
-		titleElement.setTextContent("Complete Guide to Fishing");
-		bookElement.appendChild(titleElement);
-		
-		
-		authorElement = document.createElement("author");
-		authorElement.setTextContent("Bill Jones");
-		bookElement.appendChild(authorElement);
-		
-		authorElement = document.createElement("author");
-		authorElement.setTextContent("James Cook");
-		bookElement.appendChild(authorElement);
-		
-		authorElement = document.createElement("author");
-		authorElement.setTextContent("Mary Turing");
-		bookElement.appendChild(authorElement);
-		
-		categoryElement = document.createElement("category");
-		categoryElement.setTextContent("Fishing");
-		bookElement.appendChild(categoryElement);
-		
-		categoryElement = document.createElement("category");
-		categoryElement.setTextContent("Leisure");
-		bookElement.appendChild(categoryElement);
-		
-		Element languageElement = document.createElement("language");
-		languageElement.setTextContent("French");
-		bookElement.appendChild(languageElement);
-		
-		yearElement = document.createElement("year");
-		yearElement.setTextContent("2000");
-		bookElement.appendChild(yearElement);
-		
-		editionElement = document.createElement("edition");
-		editionElement.setTextContent("2");
-		bookElement.appendChild(editionElement);
-		
-		priceElement = document.createElement("price");
-		priceElement.setTextContent("49.99");
-		bookElement.appendChild(priceElement);
-
-		root.appendChild(bookElement);
-		
-		saveXML(document, "bookstore.xml");
+		return element;
 	}
 
 	public boolean saveXML(Document document, String path){
 		TransformerFactory factory = TransformerFactory.newInstance();
 		boolean result = true;
-		
 		try {
 			Transformer transformer = factory.newTransformer();
 			transformer.setOutputProperty(OutputKeys.INDENT, "yes");
@@ -227,6 +147,9 @@ public class XMLBuilder {
 //	}
 	
 	public void convertXML(){
+		SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy mm:hh:ss");
+		Date dateFinish = new Date();
+		
 		try {
 
 		    TransformerFactory tFactory = TransformerFactory.newInstance();
@@ -240,7 +163,7 @@ public class XMLBuilder {
 		      (new javax.xml.transform.stream.StreamSource
 		            ("testXML.xml"),
 		       new javax.xml.transform.stream.StreamResult
-		            ( new FileOutputStream("xsl.html")));
+		            ( new FileOutputStream(dateFormat.format(dateFinish) + ".html")));
 		    }
 		  catch (Exception e) {
 		    e.printStackTrace( );

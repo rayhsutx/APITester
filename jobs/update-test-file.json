@@ -6,6 +6,7 @@
         "config": {
             "data": {
                 "host" : "",
+                "port":"80",
             	"cloud-host": "up.uat.kaisquare.com",
                 "sync-host": "192.168.1.93",
                 "sync-port": "5672",
@@ -19,7 +20,7 @@
                 "dev-port": "80",
                 "dev-user": "admin",
                 "dev-password": "ms1234",
-                "event-date-from": "20077015160000",
+                "event-date-from": "{{event-from}}",
                 "event-date-to": "21077015155959",
                 "username": "admin",
                 "userpass": "admin",
@@ -104,7 +105,7 @@
     {
         "type": "http",
         "name": "getuserdevices",
-        "delay": 2000,
+        "delay": 5000,
         "repeat": 0,
         "config": {
             "url": "http://{{host}}:{{port}}/api/{{bucketname}}/getuserdevices",
@@ -127,7 +128,7 @@
     	"type": "http",
     	"name": "getlivevideourl",
     	"ignoreError": true,
-    	"delay": 3000,
+    	"delay": 5000,
     	"repeat": 5,
     	"config": {
     		"url": "http://{{host}}:{{port}}/api/{{bucketname}}/getlivevideourl",

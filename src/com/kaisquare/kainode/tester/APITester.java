@@ -149,6 +149,11 @@ public class APITester {
 		timeEnded = xmlBuilder.writeContent(timeEnded, new String[]{new Timestamp(timeEnd.getTime()).toString()});
 		xmlBuilder.writeToRoot(timeEnded);
 		
+		Element commandUsed = xmlBuilder.createChildElement("commandUsed");
+		commandUsed = xmlBuilder.writeCommands(commandUsed, new String[]{"java -jar APITester "});
+		commandUsed = xmlBuilder.writeCommands(commandUsed, args);
+		xmlBuilder.writeToRoot(commandUsed);
+		
 		printResults(results);
 		Configuration.addConfigs();
 		xmlBuilder.saveXML(xmlBuilder.document, "testXML.xml");
