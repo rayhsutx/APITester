@@ -1,6 +1,7 @@
 package com.kaisquare.kainode.tester.action;
 
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -28,8 +29,36 @@ public abstract class RequestAction implements IAction {
 		Iterator<Entry<String, String>> iterator = variables.entrySet().iterator();
 		while (iterator.hasNext())
 		{
+			
 			Entry<String, String> entry = iterator.next();
 			mVariables.put(entry.getKey().toLowerCase(), entry.getValue());
+		}
+	}
+	public void setVariables(Map<String, String> variables, Map<String, String> defaultVariables){
+		Iterator<Entry<String, String>> iterator = variables.entrySet().iterator();
+		
+		while(iterator.hasNext()){
+			Entry<String, String> entry = iterator.next();
+			String entryValue = entry.getValue();
+			CharSequence char1 = "\\{\\{";
+			CharSequence char2 = "\\}\\}";
+			
+			String[] removeFront = entryValue.split("\\{\\{");
+			if(removeFront.length > 1){
+				String[] removeBack = removeFront[1].split("\\}\\}");
+				
+				entryValue = defaultVariables.get(removeBack[0]);
+				AppLogger.i("", "Entry Value New : %s", entryValue);
+				
+				mVariables.put(entry.getKey().toLowerCase(), entryValue);
+				
+			}else{
+				mVariables.put(entry.getKey().toLowerCase(), entryValue);
+			}
+			
+			if(defaultVariables.get(entry.getKey()) != null){
+				mVariables.put(entry.getKey().toLowerCase(), defaultVariables.get(entry.getKey()));
+			}
 		}
 	}
 	

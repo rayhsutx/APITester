@@ -75,18 +75,25 @@ public class TestJob implements ITester {
 						break;
 					
 					RequestAction action = (RequestAction)Actions.create(act.type);
-					if (result != null)
-						action.setVariables(result.getVariables());
-					else if (!defaultVariables.isEmpty())
-						action.setVariables(defaultVariables);
 					
+					boolean checkClassResult = checkClass(action.getClass().toString());
+					if(result != null && i == 1){
+						action.setVariables(variables, defaultVariables);
+						i ++;
+					}
+					else if (result != null){
+						action.setVariables(result.getVariables());
+					}
+					else if (!defaultVariables.isEmpty()){
+						action.setVariables(defaultVariables);
+					}
 					
 					int repeat = 0;
 					long start, end;
 					double spent;
 					for (;;) {
-						if(!defaultVariables.isEmpty() && i == 1)
-							action.setVariables(defaultVariables);
+//						if(!defaultVariables.isEmpty() && i == 1)
+//							action.setVariables(defaultVariables);
 						if (act.delay > 0)
 						{
 							AppLogger.i(this, "delay starting action '%s' in %d ms", act.name, act.delay);
@@ -248,10 +255,24 @@ public class TestJob implements ITester {
 		return null;
 	}
 	
-	public void setVariables(HashMap<String, String> data){
+//	public void setVariables(HashMap<String, String> data){
+//		
+//		for(String key : data.keySet()){
+//			defaultVariables.put(key.toLowerCase(), data.get(key));
+//		}
+//	}
+	
+	public boolean checkClass(String className){
 		
-		for(String key : data.keySet()){
-			defaultVariables.put(key.toLowerCase(), data.get(key));
+		boolean result = false;
+		
+		for(String name : className.split("\\.")){
+			if(name.equals("ArgumentDeliveryAction")){
+				result = true;
+				break;
+			}
 		}
+		
+		return result;
 	}
 }

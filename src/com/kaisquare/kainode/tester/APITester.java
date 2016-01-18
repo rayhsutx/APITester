@@ -90,6 +90,9 @@ public class APITester {
 				for(String d : data){
 					
 					String[] keyvalue = d.split("\\:");
+					if(keyvalue.length < 2){
+						keyvalue = new String[]{keyvalue[0], ""};
+					}
 					dataInput.put(keyvalue[0], keyvalue[1]);
 					
 				}

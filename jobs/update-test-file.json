@@ -78,7 +78,7 @@
     			"session-key": "{{session-key}}",
 		        "registration-number": "",
 		        "device-name": "{{dev-name}}",
-		        "model-id": "128",
+		        "model-id": "{{model-id}}",
 		        "device-key": "",
 		        "device-host": "{{dev-host}}",
 		        "device-port": "{{dev-port}}",
@@ -105,8 +105,8 @@
     {
         "type": "http",
         "name": "getuserdevices",
-        "delay": 5000,
-        "repeat": 0,
+        "delay": 10000,
+        "repeat": 2,
         "config": {
             "url": "http://{{host}}:{{port}}/api/{{bucketname}}/getuserdevices",
             "data": {
@@ -128,8 +128,8 @@
     	"type": "http",
     	"name": "getlivevideourl",
     	"ignoreError": true,
-    	"delay": 5000,
-    	"repeat": 5,
+    	"delay": 20000,
+    	"repeat": 0,
     	"config": {
     		"url": "http://{{host}}:{{port}}/api/{{bucketname}}/getlivevideourl",
     		"data": {

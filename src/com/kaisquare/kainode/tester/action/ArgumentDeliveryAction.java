@@ -60,7 +60,10 @@ public class ArgumentDeliveryAction extends RequestAction {
 		{
 			Entry<String, String>[] entries = values.entrySet().toArray(new Entry[0]);
 			for (Entry<String, String> e : entries)
-			{
+			{	
+				String entryValue = e.getValue();
+				System.out.println(entryValue);
+				AppLogger.i("", "Contains {{ }} %s", entryValue);
 				values.put(e.getKey(), parseVariables(e.getValue()));
 			}
 		}

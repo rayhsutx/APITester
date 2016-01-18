@@ -147,7 +147,7 @@ public class XMLBuilder {
 //	}
 	
 	public void convertXML(){
-		SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy mm:hh:ss");
+		SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss");
 		Date dateFinish = new Date();
 		
 		try {
