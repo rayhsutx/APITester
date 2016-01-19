@@ -45,9 +45,16 @@ public abstract class RequestAction implements IAction {
 			
 			String[] removeFront = entryValue.split("\\{\\{");
 			if(removeFront.length > 1){
+				entryValue = removeFront[0];
+				
 				String[] removeBack = removeFront[1].split("\\}\\}");
 				
-				entryValue = defaultVariables.get(removeBack[0]);
+				entryValue += defaultVariables.get(removeBack[0]);
+				
+				if(removeBack.length > 1){
+					entryValue += removeBack[1];
+				}
+				
 				AppLogger.i("", "Entry Value New : %s", entryValue);
 				
 				mVariables.put(entry.getKey().toLowerCase(), entryValue);
