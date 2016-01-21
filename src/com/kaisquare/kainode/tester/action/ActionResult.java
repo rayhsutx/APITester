@@ -7,6 +7,7 @@ public abstract class ActionResult {
 	
 	private TestActionStatus mStatus;
 	private Object mResult;
+	private String mReason;
 	protected Map<String, String> mMappingValues;
 	
 	public ActionResult(TestActionStatus status, Object result)
@@ -14,6 +15,16 @@ public abstract class ActionResult {
 		mStatus = status;
 		mResult = result;
 		mMappingValues = createMappingObject();
+	}
+	
+	protected void setReason(String reason)
+	{
+		mReason = reason;
+	}
+	
+	public String getReason()
+	{
+		return mReason;
 	}
 	
 	/**

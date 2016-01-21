@@ -7,11 +7,7 @@ version="1.0">
 <body>
 <hr></hr>
 <h2> Basic Information </h2>
-<h3>Command Used: <xsl:value-of select="testresults/commandUsed"/> </h3>
-<h3>Commands : <br></br><xsl:for-each select="testresults/commands/command">
-	<xsl:value-of select="name"/> <br></br>
-	</xsl:for-each>
-</h3>
+<h3>Command: <xsl:value-of select="testresults/commandUsed"/> </h3>
 <hr>
 </hr>
 <table border="1px">

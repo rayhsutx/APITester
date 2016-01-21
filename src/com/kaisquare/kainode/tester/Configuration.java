@@ -15,16 +15,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
-import org.w3c.dom.Element;
-
-import com.kaisquare.kainode.tester.jobs.XMLBuilder;
 import com.kaisquare.kaisync.utils.AppLogger;
 import com.kaisquare.kaisync.utils.Utils;
 
 public final class Configuration {
 	
-	
-	public static final String TEST_SUITE = "--test-suite";
 	public static final String IGNORE_FAIL = "--ignore-fail";
 	public static final String REPEAT = "--repeat";
 	public static final String TEST_CASE = "--test-case";
@@ -35,61 +30,11 @@ public final class Configuration {
 		System.out.println();
 		System.out.println("KAI Node Tester " + APITester.VERSION);
 		System.out.println("Usage:");
-		System.out.printf("%s   \t%s\n", TEST_CASE, "test case of file should be (/test/case.json,/test/case2.json)");
-		System.out.printf("%s   \t%s\n", TEST_SUITE, "directory of TestSuite should be (/path/to/testsuite)");
+		System.out.printf("%s   \t%s\n", TEST_CASE, "test case of file should be (/test/,/test/case.json,/test/case2.json)");
 		System.out.printf("%s  \t%s\n", VARIABLES, "variables for the test case/suite (key1:value1,key2:value2)");
 		System.out.printf("%s   \t%s\n", IGNORE_FAIL, "ignore jobs if it's failed to the job");
 		System.out.printf("%s   \t%s\n", REPEAT, "repeat all the jobs");
 		System.out.println();
-	}
-	
-	public static void addConfigs(){
-		
-		XMLBuilder xmlBuilder = APITester.xmlBuilder;
-		Element commands = xmlBuilder.createChildElement("commands");
-		
-		Element command = xmlBuilder.createChildElement("command");
-		Element name = xmlBuilder.createChildElement("name");
-		String suite = TEST_SUITE + " directory of TestSuite should be (/path/to/testsuite)";
-		name = xmlBuilder.writeContent(name, new String[]{suite});
-		xmlBuilder.writeElements(command, name);
-		xmlBuilder.writeElements(commands, command);
-		xmlBuilder.writeToRoot(commands);
-
-		command = xmlBuilder.createChildElement("command");
-		name = xmlBuilder.createChildElement("name"); 
-		String testcase = TEST_CASE + " test case of file should be (/test/case.json)";
-		name = xmlBuilder.writeContent(name, new String[]{testcase});
-		xmlBuilder.writeElements(command, name);
-		xmlBuilder.writeElements(commands, command);
-		xmlBuilder.writeToRoot(commands);
-		
-		command = xmlBuilder.createChildElement("command");
-		name = xmlBuilder.createChildElement("name");
-		String variable = VARIABLES + " variables for the test case/suite (key1:value1,key2:value2)";
-		name = xmlBuilder.writeContent(name, new String[]{variable});
-		xmlBuilder.writeElements(command, name);
-		xmlBuilder.writeElements(commands, command);
-		xmlBuilder.writeToRoot(commands);
-		
-		command = xmlBuilder.createChildElement("command");
-		name = xmlBuilder.createChildElement("name");
-		String ignore = IGNORE_FAIL + " ignore jobs if it's failed to the job";
-		name = xmlBuilder.writeContent(name, new String[]{ignore});
-		xmlBuilder.writeElements(command, name);
-		xmlBuilder.writeElements(commands, command);
-		xmlBuilder.writeToRoot(commands);
-
-		command = xmlBuilder.createChildElement("command");
-		name = xmlBuilder.createChildElement("name");
-		String repeat = REPEAT + " repeat all the jobs";
-		name = xmlBuilder.writeContent(name, new String[]{repeat});
-		xmlBuilder.writeElements(command, name);
-		xmlBuilder.writeElements(commands, command);
-		xmlBuilder.writeToRoot(commands);
-
-		
-		
 	}
 	
 	private static final Configuration mConfig = new Configuration();

@@ -115,6 +115,7 @@ public class HttpRequestAction extends RequestAction {
 		} catch (Exception e) {
 			AppLogger.e(this, e, "HttpRequestAction: " + url);
 			result = new JsonActionResult(TestActionStatus.Error, "");
+			result.setReason(e.getMessage());
 		} finally {
 			if (conn != null)
 			{

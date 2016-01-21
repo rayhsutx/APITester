@@ -1,7 +1,6 @@
 package com.kaisquare.kainode.tester.action;
 
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -40,8 +39,6 @@ public abstract class RequestAction implements IAction {
 		while(iterator.hasNext()){
 			Entry<String, String> entry = iterator.next();
 			String entryValue = entry.getValue();
-			CharSequence char1 = "\\{\\{";
-			CharSequence char2 = "\\}\\}";
 			
 			String[] removeFront = entryValue.split("\\{\\{");
 			if(removeFront.length > 1){
@@ -54,8 +51,6 @@ public abstract class RequestAction implements IAction {
 				if(removeBack.length > 1){
 					entryValue += removeBack[1];
 				}
-				
-				AppLogger.i("", "Entry Value New : %s", entryValue);
 				
 				mVariables.put(entry.getKey().toLowerCase(), entryValue);
 				

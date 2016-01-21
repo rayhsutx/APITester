@@ -6,7 +6,6 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -31,9 +30,11 @@ public class TestJob implements ITester {
 	private TestActionStatus[] mAllStatus;
 	private Map<String, String> defaultVariables;
 	private int success = 0, failed = 0, error = 0;
+	private XMLBuilder xmlBuilder;
 
-	public TestJob(String jobFile, Map<String, String> defaultVariables) throws IOException
+	public TestJob(XMLBuilder xmlBuilder, String jobFile, Map<String, String> defaultVariables) throws IOException
 	{
+		this.xmlBuilder = xmlBuilder; 
 		Path path = Paths.get(jobFile);
 		BufferedReader reader = null;
 		
@@ -42,9 +43,7 @@ public class TestJob implements ITester {
 			mConfig = new Gson().fromJson(reader, JobConfiguration.class);
 			reader.close();
 		} catch (IOException e) {
-			APITester.failed.add(jobFile);
-			e.printStackTrace();
-			throw new IOException();
+			throw new IOException(e);
 		}
 		
 		this.defaultVariables = defaultVariables;
@@ -57,6 +56,7 @@ public class TestJob implements ITester {
 		Map<String, String> variables = defaultVariables;
 		int i = 0;
 		double totalSpent = 0;
+		Exception ex = null;
 		try {
 			if (mConfig.actions.size() > 0)
 			{
@@ -64,19 +64,18 @@ public class TestJob implements ITester {
 				int n = 0, retry = 0;
 				for (JobActionConfiguration act : mConfig.actions)
 				{
-					Element actionElement = APITester.xmlBuilder.createChildElement("action");
+					Element actionElement = xmlBuilder.createChildElement("action");
 					
-					Element actionNameElement = APITester.xmlBuilder.createChildElement("name");
-					actionNameElement = APITester.xmlBuilder.writeContent(actionNameElement, new String[]{act.name});
+					Element actionNameElement = xmlBuilder.createChildElement("name");
+					actionNameElement = xmlBuilder.writeContent(actionNameElement, new String[]{act.name});
 					
-					APITester.xmlBuilder.writeElements(actionElement, actionNameElement);
+					xmlBuilder.writeElements(actionElement, actionNameElement);
 					
 					if (APITester.isQuitted())
 						break;
 					
 					RequestAction action = (RequestAction)Actions.create(act.type);
 					
-					boolean checkClassResult = checkClass(action.getClass().toString());
 					if(result != null && i == 1){
 						action.setVariables(variables, defaultVariables);
 						i ++;
@@ -103,6 +102,7 @@ public class TestJob implements ITester {
 							act.delay = mConfig.defaultDelay;
 						
 						try {
+							ex = null;
 							AppLogger.i(this, "\n>>>>>>>>>> Starting Action '%s'... <<<<<<<<<< (repeat %d)", act.name, repeat);
 							start = System.nanoTime();
 							result = action.submit(act.config);
@@ -121,11 +121,18 @@ public class TestJob implements ITester {
 									continue;
 								}
 								printVariables(action.getVariables());
-								throw new ActionFailedException("action '" + act.name + "' failed");
+								throw new ActionFailedException(
+										result.getStatus() == TestActionStatus.Error ?
+												result.getReason() :
+												"action '" + act.name + "' failed");
 							}
 							i++;
 						} catch (Exception e) {
-							if (!act.ignoreError) throw e;
+							if (!act.ignoreError)
+							{
+								ex = e;
+								break;
+							}
 						}
 						
 						if (act.repeat < 0)
@@ -137,24 +144,29 @@ public class TestJob implements ITester {
 						}
 						break;
 					}
-					Element statusElement = APITester.xmlBuilder.createChildElement("ActionStatus");
+					Element statusElement = xmlBuilder.createChildElement("ActionStatus");
 					
-					switch (result.getStatus())
+					if (ex == null)
 					{
-					case Ok:
-						success++;
-						statusElement = APITester.xmlBuilder.writeContent(statusElement, new String[]{"pass"});
-						break;
-					case Failed:
-						failed++;
-						statusElement = APITester.xmlBuilder.writeContent(statusElement, new String[]{"fail"});
-						break;
-					case Error:
-						error++;
-						statusElement = APITester.xmlBuilder.writeContent(statusElement, new String[]{"error"});
-						break;
-					default:
+						switch (result.getStatus())
+						{
+						case Ok:
+							success++;
+							statusElement = xmlBuilder.writeContent(statusElement, new String[]{"pass"});
+							break;
+						case Failed:
+							failed++;
+							statusElement = xmlBuilder.writeContent(statusElement, new String[]{"fail"});
+							break;
+						case Error:
+							error++;
+							statusElement = xmlBuilder.writeContent(statusElement, new String[]{"error"});
+							break;
+						default:
+						}
 					}
+					else
+						statusElement = xmlBuilder.writeContent(statusElement, new String[]{ "error:" + ex.getMessage() });
 					
 					variables = result.getVariables();
 					if (act.print != null)
@@ -168,8 +180,11 @@ public class TestJob implements ITester {
 						AppLogger.i(this, "<<<<<");
 					}
 					
-					APITester.xmlBuilder.writeElements(actionElement, statusElement);
-					APITester.xmlBuilder.writeElements(fileElement, actionElement);
+					xmlBuilder.writeElements(actionElement, statusElement);
+					xmlBuilder.writeElements(fileElement, actionElement);
+					
+					if (!act.ignoreError && ex != null)
+						throw ex;
 				}
 			}
 			else
@@ -182,7 +197,7 @@ public class TestJob implements ITester {
 			failed++;
 		} catch (Exception e) { 
 			AppLogger.e(this, e, "Test job stopped: %s", e.getMessage());
-			error++;
+			if (ex == null) error++;
 		} finally {
 			AppLogger.i(this, "Test result: total %d, %d success, %d failed, %d error (spent: %f)", 
 					mConfig.actions.size(), success, failed, error, totalSpent);
@@ -261,18 +276,4 @@ public class TestJob implements ITester {
 //			defaultVariables.put(key.toLowerCase(), data.get(key));
 //		}
 //	}
-	
-	public boolean checkClass(String className){
-		
-		boolean result = false;
-		
-		for(String name : className.split("\\.")){
-			if(name.equals("ArgumentDeliveryAction")){
-				result = true;
-				break;
-			}
-		}
-		
-		return result;
-	}
 }
