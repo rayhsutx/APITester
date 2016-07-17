@@ -57,10 +57,10 @@ public class KAISyncAction extends RequestAction implements ICommandReceivedList
 		String nodeId = getVariable("cloud-platform-device-id");
 		CommandClient cmdClient = null;
 		
-		config.syncCommand = parseVariables(config.syncCommand);
-		config.syncMacAddress = parseVariables(config.syncMacAddress);
-		config.syncEvent = parseVariables(config.syncEvent);
-		config.syncEventVideo = parseVariables(config.syncEventVideo);
+		config.syncCommand = parseVariable(config.syncCommand);
+		config.syncMacAddress = parseVariable(config.syncMacAddress);
+		config.syncEvent = parseVariable(config.syncEvent);
+		config.syncEventVideo = parseVariable(config.syncEventVideo);
 		
 		if (Utils.isStringEmpty(host))
 			throw new NullPointerException("empty 'sync-host'");
@@ -69,7 +69,7 @@ public class KAISyncAction extends RequestAction implements ICommandReceivedList
 			platformSync = KAISync.newPlatformClient(host, port, keystore, keypass);
 		} catch (IOException e) {
 			AppLogger.e(this, e, "");
-			return new EmptyActionResult(TestActionStatus.Error);
+			return new EmptyActionResult(TestActionStatus.Error, getVariables());
 		}
 		try {
 			if (config.bindCommand)
@@ -91,7 +91,7 @@ public class KAISyncAction extends RequestAction implements ICommandReceivedList
 					if (parameters != null && !parameters.isEmpty())
 					{
 						for (String p : parameters)
-							command.getParameters().add(parseVariables(p));
+							command.getParameters().add(parseVariable(p));
 					}
 					List<Command> list = Arrays.asList(command);
 
@@ -101,13 +101,13 @@ public class KAISyncAction extends RequestAction implements ICommandReceivedList
 			}
 			if (!Utils.isStringEmpty(config.syncEvent))
 			{
-				String eventData = parseVariables(config.data.get("data") != null ? config.data.get("data").toString() : "");
-				String eventType = parseVariables(config.data.get("type") != null ? config.data.get("type").toString() : "");
-				String eventTime = parseVariables(config.data.get("time") != null ? config.data.get("time").toString() : "");
-				String eventDeviceId = parseVariables(config.data.get("deviceid") != null ? config.data.get("deviceid").toString() : "");
-				String eventChannelId = parseVariables(config.data.get("channelid") != null ? config.data.get("channelid").toString() : "");
-				String binary = parseVariables(config.data.get("binary") != null ? config.data.get("binary").toString() : "");
-				String eventVideo = parseVariables(config.data.get("video") != null ? config.data.get("video").toString() : "");
+				String eventData = parseVariable(config.data.get("data") != null ? config.data.get("data").toString() : "");
+				String eventType = parseVariable(config.data.get("type") != null ? config.data.get("type").toString() : "");
+				String eventTime = parseVariable(config.data.get("time") != null ? config.data.get("time").toString() : "");
+				String eventDeviceId = parseVariable(config.data.get("deviceid") != null ? config.data.get("deviceid").toString() : "");
+				String eventChannelId = parseVariable(config.data.get("channelid") != null ? config.data.get("channelid").toString() : "");
+				String binary = parseVariable(config.data.get("binary") != null ? config.data.get("binary").toString() : "");
+				String eventVideo = parseVariable(config.data.get("video") != null ? config.data.get("video").toString() : "");
 				byte[] eventBinary = !Utils.isStringEmpty(binary) ? Base64.decodeBase64(binary) : null;
 				
 				ExecutorService threadPool = Executors.newFixedThreadPool(config.threads > 0 ? config.threads : 1, new PThreadFactory("event-video"));
@@ -204,8 +204,7 @@ public class KAISyncAction extends RequestAction implements ICommandReceivedList
 			}
 			platformSync.close();
 		}
-		EmptyActionResult result = new EmptyActionResult(resultStatus);
-		result.putVariableAll(getVariables());
+		EmptyActionResult result = new EmptyActionResult(resultStatus, getVariables());
 		
 		return result;
 	}

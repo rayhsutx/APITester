@@ -7,19 +7,19 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import com.google.gson.Gson;
+import com.kaisquare.kainode.tester.VariableCollection;
 
 public class JsonActionResult extends ActionResult {
 	
 	private static final HashMap<String, Object> MAP_TYPE = new HashMap<String, Object>();
 
-	public JsonActionResult(TestActionStatus status, Object result) {
-		super(status, result);
+	public JsonActionResult(TestActionStatus status, VariableCollection variables, Object result) {
+		super(status, variables, result);
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	protected void assignMappingValues(Map<String, String> createMappingObject,
-			TestActionStatus status, Object result, Map<String, String> mapping) {
+	protected void assignMappingValues(TestActionStatus status, Object result, Map<String, String> mapping) {
 		
 		if (mapping == null || mapping.size() == 0)
 			return;

@@ -1,9 +1,9 @@
 package com.kaisquare.kainode.tester.action;
 
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Map.Entry;
 
+import com.kaisquare.kainode.tester.VariableCollection;
 import com.kaisquare.kaisync.utils.AppLogger;
 
 public class PrintTestAction extends RequestAction {
@@ -20,7 +20,7 @@ public class PrintTestAction extends RequestAction {
 
 	@Override
 	public ActionResult submit(ActionConfiguration config) {
-		Map<String, String> map = getVariables();
+		VariableCollection map = getVariables();
 		Iterator<Entry<String, String>> iterator = map.entrySet().iterator();
 		AppLogger.i(this, "Variables:");
 		while (iterator.hasNext())
@@ -29,9 +29,7 @@ public class PrintTestAction extends RequestAction {
 			AppLogger.i(this, "%s: %s", entry.getKey(), entry.getValue());
 		}
 		
-		EmptyActionResult result = new EmptyActionResult(TestActionStatus.Ok, "", null);
-		result.putVariableAll(map);
-		
+		EmptyActionResult result = new EmptyActionResult(TestActionStatus.Ok, getVariables(), "");		
 		return result;
 	}
 }

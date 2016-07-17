@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 
 import com.kaisquare.kaisync.utils.AppLogger;
@@ -37,7 +36,7 @@ public class HttpRequestAction extends RequestAction {
 		InputStream in = null;
 		OutputStream os = null;
 		ActionResult result = null;
-		String url = parseVariables(config.url);
+		String url = parseVariable(config.url);
 		
 		try {
 			conn = (HttpURLConnection) new URL(url).openConnection();
@@ -68,11 +67,7 @@ public class HttpRequestAction extends RequestAction {
 			}
 			
 			conn.connect();
-			AppLogger.i(this, "connected %s", url);
-//			if(!conn.getDoOutput()){
-//				conn.setDoOutput(true);
-//			}
-			
+			AppLogger.i(this, "connected %s", url);			
 			
 			if(postBytes.length > 0){
 				os = conn.getOutputStream();
@@ -106,15 +101,14 @@ public class HttpRequestAction extends RequestAction {
 			}
 			
 			AppLogger.d(this, "response: %s", sbResult.toString());
-			result = new JsonActionResult(TestActionStatus.Ok, sbResult.toString());
-			result.putVariableAll(getVariables());
+			result = new JsonActionResult(TestActionStatus.Ok, getVariables(), sbResult.toString());
 			result.putVariable("__COOKIE__", cookie);
-			result.parseResult(parseVariables(config.values));
+			result.parseResult(config.values);
 			
 			checkResult(result, config.check);			
 		} catch (Exception e) {
 			AppLogger.e(this, e, "HttpRequestAction: " + url);
-			result = new JsonActionResult(TestActionStatus.Error, "");
+			result = new JsonActionResult(TestActionStatus.Error, getVariables(), "");
 			result.setReason(e.getMessage());
 		} finally {
 			if (conn != null)
@@ -139,20 +133,6 @@ public class HttpRequestAction extends RequestAction {
 		return result;
 	}
 
-	@SuppressWarnings("unchecked")
-	protected Map<String, String> parseVariables(Map<String, String> values) {
-		if (values != null)
-		{
-			Entry<String, String>[] entries = values.entrySet().toArray(new Entry[0]);
-			for (Entry<String, String> e : entries)
-			{
-				values.put(e.getKey(), parseVariables(e.getValue()));
-			}
-		}
-		
-		return values;
-	}
-
 	private byte[] getPostData(ActionConfiguration config) {
 		StringBuilder sb = new StringBuilder();
 		Iterator<Entry<String, Object>> iterator = config.data.entrySet().iterator();
@@ -164,7 +144,7 @@ public class HttpRequestAction extends RequestAction {
 			
 			String value;
 			try {
-				value = URLEncoder.encode(parseVariables(String.valueOf(entry.getValue())), "utf8");
+				value = URLEncoder.encode(parseVariable(String.valueOf(entry.getValue())), "utf8");
 			} catch (UnsupportedEncodingException e) {
 				AppLogger.e(this, e, "");
 				continue;

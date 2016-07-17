@@ -2,20 +2,21 @@ package com.kaisquare.kainode.tester.action;
 
 import java.util.Map;
 
+import com.kaisquare.kainode.tester.VariableCollection;
+
 public class EmptyActionResult extends ActionResult {
 	
-	public EmptyActionResult(TestActionStatus status)
+	public EmptyActionResult(TestActionStatus status, VariableCollection variables)
 	{
-		super(status, null);
+		super(status, variables, null);
 	}
 
-	public EmptyActionResult(TestActionStatus status, Object result, Map<String, String> mapping) {
-		super(status, result);
+	public EmptyActionResult(TestActionStatus status, VariableCollection variables, Object result) {
+		super(status, variables, result);
 	}
 
 	@Override
-	protected void assignMappingValues(Map<String, String> createMappingObject,
-			TestActionStatus status, Object result, Map<String, String> mapping) {
+	protected void assignMappingValues(TestActionStatus status, Object result, Map<String, String> mapping) {
 	}
 
 }

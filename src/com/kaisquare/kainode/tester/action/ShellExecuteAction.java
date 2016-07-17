@@ -45,14 +45,14 @@ public class ShellExecuteAction extends RequestAction {
 		if (Utils.isStringEmpty(config.command))
 			throw new NullPointerException("command is empty.");
 		
-		ActionResult result = new EmptyActionResult(TestActionStatus.Ok);
+		ActionResult result = new EmptyActionResult(TestActionStatus.Ok, getVariables());
 		BufferedReader reader = null;
 		BufferedWriter out = null;
 		int exitValue = -1;
 		String command = "";
 		
 		try {
-			command = parseVariables(config.command);
+			command = parseVariable(config.command);
 			AppLogger.d(this, "running command: %s", command);
 			ProcessBuilder pb = new ProcessBuilder(command.split(" "));
 			pb.redirectErrorStream(true);
@@ -104,7 +104,6 @@ public class ShellExecuteAction extends RequestAction {
 			} catch (InterruptedException e) {}
 			
 			values.put("exitvalue", Integer.toString(exitValue));
-			result.putVariableAll(values);
 			
 			checkResult(result, config.check);
 		} catch (IOException e) {

@@ -5,18 +5,14 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.PropertyConfigurator;
-import org.joda.time.DateTime;
-import org.w3c.dom.Element;
 
 import com.kaisquare.kainode.tester.jobs.TestJob;
-import com.kaisquare.kainode.tester.jobs.XMLBuilder;
 import com.kaisquare.kaisync.utils.AppLogger;
 import com.kaisquare.kaisync.utils.Utils;
 
@@ -44,10 +40,8 @@ public class APITester {
 		
 		loadConfiguration(args);
 		
-		DateTime now;
 		long timeStart;
 		long timeEnd;
-		XMLBuilder xmlBuilder = new XMLBuilder();
 		
 		List<File> fileList = new LinkedList<File>(); 
 		String pathTestCase = Configuration.getConfig().getConfigValue(Configuration.TEST_CASE);
@@ -62,22 +56,20 @@ public class APITester {
 			}
 		});
 		
+		VariableCollection variables = new VariableCollection();
+		
 		if (!Utils.isStringEmpty(pathTestCase))
 		{
-			createXmlElementNode(xmlBuilder, "commandUsed", new String[] { "java -jar APITester " + joinString(Arrays.asList(args), " ") }, "");
-
-			Map<String, String> dataInput = null;
 			if (!Utils.isStringEmpty(dataVariables))
 			{
-				dataInput = new HashMap<String, String>();
 				String[] data = dataVariables.split("\\,");
 				for(String d : data){
 					String[] keyvalue = d.split("\\:|\\=");
 					if(keyvalue.length < 2){
-						dataInput.put(keyvalue[0], "");
+						variables.put(keyvalue[0], "");
 					}
 					else				
-						dataInput.put(keyvalue[0], keyvalue[1]);
+						variables.put(keyvalue[0], keyvalue[1]);
 				}
 			}
 			
@@ -97,22 +89,15 @@ public class APITester {
 					fileList.add(new File(file));
 			}
 			
-			now = DateTime.now();
 			timeStart = System.nanoTime();
-			createXmlElementNode(xmlBuilder, "timeStart", new String[]{ now.toString("yyyy/MM/dd HH:mm:ss") });
-			
-			Map<String, List<String>> results = runTest(xmlBuilder, fileList, dataInput);
-			
-			now = DateTime.now();
+			runTest(fileList, variables);
 			timeEnd = System.nanoTime();
+			
 			long spent = timeEnd - timeStart;
 			
 			String timeDiff = "" + (spent / 1000000) + "ms";
-			createXmlElementNode(xmlBuilder, "timeDifference", new String[]{ timeDiff });
-			createXmlElementNode(xmlBuilder, "timeEnd", new String[]{ now.toString("yyyy/MM/dd HH:mm:ss") });
 			
-			printResults(xmlBuilder, results);
-			xmlBuilder.convertXML();
+			AppLogger.i(TAG, "Total time spent: %s", timeDiff);
 			
 			System.exit(0);
 		}else{
@@ -120,18 +105,6 @@ public class APITester {
 			System.exit(1);
 		}
 		
-	}
-
-	private static String joinString(Iterable<String> arr, String delimeter) {
-		StringBuilder sb = new StringBuilder();
-		for (String s : arr)
-		{
-			if (sb.length() > 0)
-				sb.append(delimeter);
-			sb.append(s);
-		}
-		
-		return sb.toString();
 	}
 
 	private static void loadConfiguration(String[] args) {
@@ -142,11 +115,10 @@ public class APITester {
 		config.setConfigs(configs);
 	}
 	
-	private static Map<String, List<String>> runTest(XMLBuilder xmlBuilder, Iterable<File> files, Map<String, String> defaultVariables)
+	private static Map<String, List<String>> runTest(Iterable<File> files, VariableCollection variables)
 	{
 		Configuration config = Configuration.getConfig();
 		boolean breakLoop = false;
-		Element testType = xmlBuilder.createChildElement("test");
 		ArrayList<String> passed = new ArrayList<String>();
 		ArrayList<String> failed = new ArrayList<String>();
 		ArrayList<String> untested = new ArrayList<String>();
@@ -154,28 +126,16 @@ public class APITester {
 		do
 		{
 			boolean skip = false;
-			Map<String, String> variables = null;
 			for (File file : files)
 			{
-				boolean jobSuccess = false;
-				Element fileElement = xmlBuilder.createChildElement("file");
-				HashMap<String, String> name = new HashMap<String, String>();
-				name.put("name", file.getName());
-				fileElement = xmlBuilder.writeAttributes(fileElement, name);
-				
+				boolean jobSuccess = false;				
 				if (!skip)
 				{
 					AppLogger.i(TAG, "Starting test from %s", file.getName());
 					TestJob tester;
-					try {
-						
-						if(defaultVariables != null)
-							variables = defaultVariables;
-						else
-							variables = new HashMap<String, String>();
-						
-						tester = new TestJob(xmlBuilder, file.getAbsolutePath(), variables);
-						variables = tester.doTest(fileElement);
+					try {						
+						tester = new TestJob(file.getAbsolutePath(), variables);
+						variables = tester.doTest();
 						jobSuccess = (tester.getErrors() == 0 && tester.getFailure() == 0);
 						
 						if (jobSuccess)
@@ -195,13 +155,6 @@ public class APITester {
 				else
 					untested.add(file.getName());
 				
-				Element testStatusElement = xmlBuilder.createChildElement("TestStatus");
-				testStatusElement = xmlBuilder.writeContent(testStatusElement, new String[] { 
-						skip ? "untested" : jobSuccess ? "passed" : "failed" });
-				xmlBuilder.writeElements(fileElement, testStatusElement);
-				xmlBuilder.writeElements(testType, fileElement);
-				xmlBuilder.writeToRoot(testType);
-				
 				skip = !config.hasConfig(Configuration.IGNORE_FAIL) && !jobSuccess;
 			}
 		} while (!breakLoop && config.hasConfig(Configuration.REPEAT) && !APITester.isQuitted());
@@ -220,36 +173,5 @@ public class APITester {
 		results.put("Untested", untested);
 
 		return results;
-	}
-	
-	private static void printResults(XMLBuilder xmlBuilder, Map<String, List<String>> results){
-		Element resultSum = xmlBuilder.createChildElement("results");
-		
-		for(String key : results.keySet()){
-			List<String> result = results.get(key);
-			
-			Element currResult = xmlBuilder.createChildElement(key);
-			Element data = xmlBuilder.createChildElement("data");
-			data = xmlBuilder.writeContent(data, new String[] { joinString(result, ", ") });
-			Element count = xmlBuilder.createChildElement("count");
-			count= xmlBuilder.writeContent(count, new String[]{ Integer.toString(result.size()) });
-			xmlBuilder.writeElements(currResult, count);
-			xmlBuilder.writeElements(currResult, data);
-			xmlBuilder.writeElements(resultSum, currResult);
-		}
-		
-		xmlBuilder.writeToRoot(resultSum);
-	}
-	
-	private static void createXmlElementNode(XMLBuilder xmlBuilder, String childName, String[] content)
-	{
-		createXmlElementNode(xmlBuilder, childName, content, ",");
-	}
-	
-	private static void createXmlElementNode(XMLBuilder xmlBuilder, String childName, String[] content, String delimeter)
-	{
-		Element element = xmlBuilder.createChildElement(childName);
-		element = xmlBuilder.writeContent(element, content, delimeter);
-		xmlBuilder.writeToRoot(element);
 	}
 }

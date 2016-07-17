@@ -1,20 +1,22 @@
 package com.kaisquare.kainode.tester.action;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+
+import com.kaisquare.kainode.tester.VariableCollection;
 
 public abstract class ActionResult {
 	
 	private TestActionStatus mStatus;
 	private Object mResult;
 	private String mReason;
-	protected Map<String, String> mMappingValues;
+	protected VariableCollection mMapVariables;
 	
-	public ActionResult(TestActionStatus status, Object result)
+	public ActionResult(TestActionStatus status, VariableCollection variables, Object result)
 	{
 		mStatus = status;
 		mResult = result;
-		mMappingValues = createMappingObject();
+		mMapVariables = variables;
 	}
 	
 	protected void setReason(String reason)
@@ -27,6 +29,21 @@ public abstract class ActionResult {
 		return mReason;
 	}
 	
+	protected Map<String, String> parseVariables(Map<String, String> values)
+	{
+		if (values != null)
+		{
+			@SuppressWarnings("unchecked")
+			Entry<String, String>[] entries = values.entrySet().toArray(new Entry[0]);
+			for (Entry<String, String> e : entries)
+			{
+				parseVariable(e.getKey(), getVariables().parseVariable(e.getValue()), e.getValue());
+			}
+		}
+		
+		return values;
+	}
+
 	/**
 	 * Parse the result and put the values which are from result into variables for next action 
 	 * @param mapping specify variable in the result 
@@ -34,12 +51,7 @@ public abstract class ActionResult {
 	public void parseResult(Map<String, String> mapping)
 	{
 		if (mStatus == TestActionStatus.Ok)
-			assignMappingValues(createMappingObject(), mStatus, mResult, mapping);
-	}
-	
-	protected Map<String, String> createMappingObject()
-	{
-		return new HashMap<String, String>();
+			assignMappingValues(mStatus, mResult, parseVariables(mapping));
 	}
 	
 	/**
@@ -49,7 +61,7 @@ public abstract class ActionResult {
 	 */
 	public void putVariable(String name, String value)
 	{
-		mMappingValues.put(name, value);
+		mMapVariables.put(name, value);
 	}
 	
 	/**
@@ -58,7 +70,7 @@ public abstract class ActionResult {
 	 */
 	public void putVariableAll(Map<String, String> variables)
 	{
-		mMappingValues.putAll(variables);
+		mMapVariables.putAll(variables);
 	}
 
 	public Object getResult()
@@ -78,17 +90,18 @@ public abstract class ActionResult {
 	
 	public String getValue(String key)
 	{
-		return mMappingValues.get(key);
+		return mMapVariables.get(key);
 	}
 	
-	public Map<String, String> getVariables()
+	public VariableCollection getVariables()
 	{
-		Map<String, String> map = createMappingObject();
-		map.putAll(mMappingValues);
-		
-		return map;
+		return mMapVariables;
 	}
 	
-	protected abstract void assignMappingValues(Map<String, String> createMappingObject,
-			TestActionStatus status, Object result, Map<String, String> mapping);
+	protected void parseVariable(String name, String value, String rawValue)
+	{
+		putVariable(name, value);
+	}
+	
+	protected abstract void assignMappingValues(TestActionStatus status, Object result, Map<String, String> mapping);
 }

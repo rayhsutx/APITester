@@ -10,11 +10,10 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.w3c.dom.Element;
-
 import com.google.gson.Gson;
 import com.kaisquare.kainode.tester.APITester;
 import com.kaisquare.kainode.tester.ITester;
+import com.kaisquare.kainode.tester.VariableCollection;
 import com.kaisquare.kainode.tester.action.ActionResult;
 import com.kaisquare.kainode.tester.action.Actions;
 import com.kaisquare.kainode.tester.action.Actions.ActionNotFoundException;
@@ -28,33 +27,35 @@ public class TestJob implements ITester {
 	
 	private JobConfiguration mConfig;
 	private TestActionStatus[] mAllStatus;
-	private Map<String, String> defaultVariables;
+	private VariableCollection mVariables;
 	private int success = 0, failed = 0, error = 0;
-	private XMLBuilder xmlBuilder;
 
-	public TestJob(XMLBuilder xmlBuilder, String jobFile, Map<String, String> defaultVariables) throws IOException
+	public TestJob(String jobFile, VariableCollection variables) throws IOException
 	{
-		this.xmlBuilder = xmlBuilder; 
 		Path path = Paths.get(jobFile);
 		BufferedReader reader = null;
 		
 		try {
 			reader = Files.newBufferedReader(path, Charset.forName("utf8"));
 			mConfig = new Gson().fromJson(reader, JobConfiguration.class);
-			reader.close();
 		} catch (IOException e) {
 			throw new IOException(e);
+		} finally {
+			if (reader != null)
+			{
+				try {
+					reader.close();
+				} catch (IOException e){}
+			}
 		}
 		
-		this.defaultVariables = defaultVariables;
+		mVariables = variables;
 	}
 
 	@Override
-	public Map<String, String> doTest(Element fileElement) throws Exception {
+	public VariableCollection doTest() throws Exception {
 		
 		ActionResult result = null;
-		Map<String, String> variables = defaultVariables;
-		int i = 0;
 		double totalSpent = 0;
 		Exception ex = null;
 		try {
@@ -63,36 +64,17 @@ public class TestJob implements ITester {
 				mAllStatus = new TestActionStatus[mConfig.actions.size()];
 				int n = 0, retry = 0;
 				for (JobActionConfiguration act : mConfig.actions)
-				{
-					Element actionElement = xmlBuilder.createChildElement("action");
-					
-					Element actionNameElement = xmlBuilder.createChildElement("name");
-					actionNameElement = xmlBuilder.writeContent(actionNameElement, new String[]{act.name});
-					
-					xmlBuilder.writeElements(actionElement, actionNameElement);
-					
+				{					
 					if (APITester.isQuitted())
 						break;
 					
 					RequestAction action = (RequestAction)Actions.create(act.type);
-					
-					if(result != null && i == 1){
-						action.setVariables(variables, defaultVariables);
-						i ++;
-					}
-					else if (result != null){
-						action.setVariables(result.getVariables());
-					}
-					else if (!defaultVariables.isEmpty()){
-						action.setVariables(defaultVariables);
-					}
+					action.setVariables(mVariables);
 					
 					int repeat = 0;
 					long start, end;
 					double spent;
 					for (;;) {
-//						if(!defaultVariables.isEmpty() && i == 1)
-//							action.setVariables(defaultVariables);
 						if (act.delay > 0)
 						{
 							AppLogger.i(this, "delay starting action '%s' in %d ms", act.name, act.delay);
@@ -126,7 +108,6 @@ public class TestJob implements ITester {
 												result.getReason() :
 												"action '" + act.name + "' failed");
 							}
-							i++;
 						} catch (Exception e) {
 							if (!act.ignoreError)
 							{
@@ -144,7 +125,6 @@ public class TestJob implements ITester {
 						}
 						break;
 					}
-					Element statusElement = xmlBuilder.createChildElement("ActionStatus");
 					
 					if (ex == null)
 					{
@@ -152,36 +132,27 @@ public class TestJob implements ITester {
 						{
 						case Ok:
 							success++;
-							statusElement = xmlBuilder.writeContent(statusElement, new String[]{"pass"});
 							break;
 						case Failed:
 							failed++;
-							statusElement = xmlBuilder.writeContent(statusElement, new String[]{"fail"});
 							break;
 						case Error:
 							error++;
-							statusElement = xmlBuilder.writeContent(statusElement, new String[]{"error"});
 							break;
 						default:
 						}
 					}
-					else
-						statusElement = xmlBuilder.writeContent(statusElement, new String[]{ "error:" + ex.getMessage() });
 					
-					variables = result.getVariables();
 					if (act.print != null)
 					{
 						AppLogger.i(this, "print variables >>>>>");
 						for (String var : act.print)
 						{
 							if (!Utils.isStringEmpty(var))
-								AppLogger.i(this, "%s=%s", var, variables.get(var));
+								AppLogger.i(this, "%s=%s", var, mVariables.get(var));
 						}
 						AppLogger.i(this, "<<<<<");
 					}
-					
-					xmlBuilder.writeElements(actionElement, statusElement);
-					xmlBuilder.writeElements(fileElement, actionElement);
 					
 					if (!act.ignoreError && ex != null)
 						throw ex;
@@ -204,7 +175,7 @@ public class TestJob implements ITester {
 		}
 		
 		AppLogger.i(this, "Done");
-		return variables;
+		return mVariables;
 	}
 
 	private void printVariables(Map<String, String> variables) {
@@ -263,17 +234,4 @@ public class TestJob implements ITester {
 		}
 		
 	}
-
-	@Override
-	public Map<String, String> doTest() throws Exception {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	
-//	public void setVariables(HashMap<String, String> data){
-//		
-//		for(String key : data.keySet()){
-//			defaultVariables.put(key.toLowerCase(), data.get(key));
-//		}
-//	}
 }
