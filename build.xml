@@ -78,5 +78,6 @@
             <zipfileset dir="libs" includes="*.jar"/>
             <fileset file="hashcode"/>
         </jar>
+        <delete file="hashcode" />
     </target>
 </project>
