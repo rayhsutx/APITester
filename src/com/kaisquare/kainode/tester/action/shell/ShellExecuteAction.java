@@ -1,4 +1,4 @@
-package com.kaisquare.kainode.tester.action;
+package com.kaisquare.kainode.tester.action.shell;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -20,6 +20,12 @@ import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.kaisquare.kainode.tester.action.ActionConfiguration;
+import com.kaisquare.kainode.tester.action.Actions;
+import com.kaisquare.kainode.tester.action.RequestAction;
+import com.kaisquare.kainode.tester.action.TestActionStatus;
+import com.kaisquare.kainode.tester.action.result.ActionResult;
+import com.kaisquare.kainode.tester.action.result.EmptyActionResult;
 import com.kaisquare.kaisync.utils.AppLogger;
 import com.kaisquare.kaisync.utils.Utils;
 
@@ -38,11 +44,16 @@ public class ShellExecuteAction extends RequestAction {
 	public String getActionType() {
 		return Actions.ACTION_SHELL;
 	}
+	
+	@Override
+	public java.lang.Class<? extends ActionConfiguration> getConfigurationClass() {
+		return ShellActionConfiguration.class;
+	}
 
 	@Override
-	public ActionResult submit(ActionConfiguration config) {
-		
-		if (Utils.isStringEmpty(config.command))
+	public ActionResult submit(ActionConfiguration c) {
+		ShellActionConfiguration config = (ShellActionConfiguration) c;
+		if (Utils.isStringEmpty(config.getCommand()))
 			throw new NullPointerException("command is empty.");
 		
 		ActionResult result = new EmptyActionResult(TestActionStatus.Ok, getVariables());
@@ -52,7 +63,7 @@ public class ShellExecuteAction extends RequestAction {
 		String command = "";
 		
 		try {
-			command = parseVariable(config.command);
+			command = parseVariable(config.getCommand());
 			AppLogger.d(this, "running command: %s", command);
 			ProcessBuilder pb = new ProcessBuilder(command.split(" "));
 			pb.redirectErrorStream(true);
@@ -60,25 +71,25 @@ public class ShellExecuteAction extends RequestAction {
 			mPid = getPID(mProcess);
 			AppLogger.v(this, "pid = %s", mPid);
 			
-			if (config.timeout > 0)
+			if (config.getTimeout() > 0)
 			{
 				mTimer = new Timer();
-				mTimer.schedule(new TimeoutTask(), config.timeout);
+				mTimer.schedule(new TimeoutTask(), config.getTimeout());
 			}
 			
 			reader = new BufferedReader(new InputStreamReader(mProcess.getInputStream()));
 			String line;
 			
-			if (!Utils.isStringEmpty(config.redirect))
+			if (!Utils.isStringEmpty(config.getRedirect()))
 			{
-				Path path = Paths.get(config.redirect);
+				Path path = Paths.get(config.getRedirect());
 				out = Files.newBufferedWriter(path, Charset.forName("utf8"), StandardOpenOption.CREATE);
 			}
 			
 			Map<String, String> values = new HashMap<String, String>();
 			values.putAll(getVariables());
 			
-			ValueParser[] parsers = getValueParsers(config.values);
+			ValueParser[] parsers = getValueParsers(config.getValues());
 			int number = 0;
 			while ((line = reader.readLine()) != null)
 			{
@@ -105,9 +116,9 @@ public class ShellExecuteAction extends RequestAction {
 			
 			values.put("exitvalue", Integer.toString(exitValue));
 			
-			checkResult(result, config.check);
+			checkResult(result, config.getCheck());
 		} catch (IOException e) {
-			AppLogger.e(this, e, "error executing command: %s", Utils.isStringEmpty(command) ? config.command : command);
+			AppLogger.e(this, e, "error executing command: %s", Utils.isStringEmpty(command) ? config.getCommand() : command);
 			result.setStatus(TestActionStatus.Error);
 		} finally {
 			if (mTimer != null)

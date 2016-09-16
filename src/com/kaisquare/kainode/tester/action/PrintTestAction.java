@@ -4,6 +4,8 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 
 import com.kaisquare.kainode.tester.VariableCollection;
+import com.kaisquare.kainode.tester.action.result.ActionResult;
+import com.kaisquare.kainode.tester.action.result.EmptyActionResult;
 import com.kaisquare.kaisync.utils.AppLogger;
 
 public class PrintTestAction extends RequestAction {

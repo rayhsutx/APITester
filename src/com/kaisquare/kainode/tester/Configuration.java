@@ -21,19 +21,23 @@ import com.kaisquare.kaisync.utils.Utils;
 public final class Configuration {
 	
 	public static final String IGNORE_FAIL = "--ignore-fail";
-	public static final String REPEAT = "--repeat";
-	public static final String TEST_CASE = "--test-case";
-	public static final String VARIABLES = "--d";
+	public static final String LOOP = "--loop";
+	public static final String JOBS = "--jobs";
+	public static final String VARIABLES = "--params";
+	public static final String THREADS = "--threads";
+	public static final String DURATION = "--duration";
 
 	public static void usage()
 	{
 		System.out.println();
 		System.out.println("KAI Node Tester " + APITester.VERSION);
 		System.out.println("Usage:");
-		System.out.printf("%s   \t%s\n", TEST_CASE, "test case of file should be (/test/,/test/case.json,/test/case2.json)");
+		System.out.printf("%s   \t%s\n", JOBS, "test case of file should be (/test/,/test/case.json,/test/case2.json)");
 		System.out.printf("%s  \t%s\n", VARIABLES, "variables for the test case/suite (key1:value1,key2:value2)");
 		System.out.printf("%s   \t%s\n", IGNORE_FAIL, "ignore jobs if it's failed to the job");
-		System.out.printf("%s   \t%s\n", REPEAT, "repeat all the jobs");
+		System.out.printf("%s   \t%s\n", LOOP, "repeat all the jobs");
+		System.out.printf("%s   \t%s\n", THREADS, "how many threads of a job");
+		System.out.printf("%s   \t%s\n", DURATION, "run the job in a period of time");
 		System.out.println();
 	}
 	

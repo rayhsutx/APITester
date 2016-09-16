@@ -3,36 +3,41 @@ package com.kaisquare.kainode.tester.action;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import com.google.gson.annotations.SerializedName;
-
 public class ActionConfiguration {
+
 	//general use
-	public String name;
-	public int timeout = 10000;
-	public int count = 0;
-	public Map<String, String> values;
-	public LinkedHashMap<String, Object> data;
-	public LinkedHashMap<String, String> check;
-	//http use only
-	public String url;
-	public String method = "POST";
-	//shell use only
-	public String command;
-	public String redirect;
-	//kaisync use only
-	@SerializedName("sync-event")
-	public String syncEvent;
-	@SerializedName("sync-event-video")
-	public String syncEventVideo;
-	@SerializedName("sync-command")
-	public String syncCommand;
-	@SerializedName("bind-command")
-	public boolean bindCommand;
-	@SerializedName("wait-command")
-	public boolean waitCommand;
-	@SerializedName("wait-timeout")
-	public int commandTimeout;
-	@SerializedName("sync-mac-caddress")
-	public String syncMacAddress;
-	public int threads;
+	private String name;
+	private int timeout = 10000;
+	private int count = 0;
+	private Map<String, String> values;
+	private LinkedHashMap<String, Object> data;
+	private LinkedHashMap<String, String> check;
+	
+	public String getName() {
+		return name;
+	}
+	
+	protected void setTimeout(int timeout) {
+		this.timeout = timeout;
+	}
+	
+	public int getTimeout() {
+		return timeout;
+	}
+	
+	public int getCount() {
+		return count;
+	}
+	
+	public Map<String, String> getValues() {
+		return values;
+	}
+	
+	public LinkedHashMap<String, Object> getData() {
+		return data;
+	}
+	
+	public LinkedHashMap<String, String> getCheck() {
+		return check;
+	}
 }

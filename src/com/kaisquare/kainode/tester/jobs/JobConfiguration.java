@@ -6,19 +6,74 @@ import com.kaisquare.kainode.tester.action.ActionConfiguration;
 
 public class JobConfiguration {
 	
-	public List<JobActionConfiguration> actions;
-	public int defaultDelay = 0;
-	
+	private List<JobActionConfiguration> actions;
+	private int defaultDelay = 0;
+	private int loop = 1;
+	private int duration = 0;
+
+	public int getLoop() {
+		return loop;
+	}
+
+	public int getDuration() {
+		return duration;
+	}
+
+	public List<JobActionConfiguration> getActions() {
+		return actions;
+	}
+
+	protected int getDefaultDelay() {
+		return defaultDelay;
+	}
+
 	public static class JobActionConfiguration
 	{
-		public String type;
-		public String name;
-		public int delay = 0;
-		public int retry = 0;
-		public int repeat = 0; //-1: infinite, > 0: count of repeat
-		public boolean ignoreError = false;
-		public ActionConfiguration config;
-		public List<String> print;
+		private String type;
+		private String name;
+		private int delay = 0;
+		private int retry = 0;
+		private int repeat = 0; //-1: infinite, > 0: count of repeat
+		private boolean ignoreError = false;
+		private ActionConfiguration config;
+		private List<String> print;
+		
+		public String getType() {
+			return type;
+		}
+		
+		public String getName() {
+			return name;
+		}
+		
+		public int getDelay() {
+			return delay;
+		}
+
+		public void setDelay(int defaultDelay) {
+			if (defaultDelay >= 0)
+				delay = defaultDelay;
+		}
+		
+		public int getRetry() {
+			return retry;
+		}
+		
+		public int getRepeat() {
+			return repeat;
+		}
+		
+		public boolean isIgnoreError() {
+			return ignoreError;
+		}
+		
+		public ActionConfiguration getConfig() {
+			return config;
+		}
+		
+		public List<String> getPrint() {
+			return print;
+		}
 	}
 	
 }

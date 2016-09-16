@@ -2,7 +2,7 @@ package com.kaisquare.kup.api;
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
-import com.kaisquare.gson.GsonBuilder;
+import com.kaisquare.gson.DefaultGsonBuilder;
 
 public class KupMessage {
 	public String eventId;
@@ -43,7 +43,7 @@ public class KupMessage {
 		{
 			if (!"".equals(content))
 			{
-				Gson gson = GsonBuilder.create();
+				Gson gson = DefaultGsonBuilder.create();
 				try {
 					sContent = gson.fromJson(content, KupMessageContent.class);
 				} catch (Exception e) {

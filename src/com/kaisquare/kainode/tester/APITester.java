@@ -5,10 +5,15 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.PropertyConfigurator;
 
@@ -18,8 +23,12 @@ import com.kaisquare.kaisync.utils.Utils;
 
 public class APITester {
 
-	public static final String VERSION = "1.2";
+	public static final String VERSION = "1.3";
 	public static final String TAG = "Main";
+	
+	private static final int DURATION_DAY = 24 * 60 * 60;
+	private static final int DURATION_HOUR = 60 * 60;
+	private static final int DURATION_MINUTE = 60;
 	
 	private static volatile boolean quitted;
 	
@@ -44,7 +53,7 @@ public class APITester {
 		long timeEnd;
 		
 		List<File> fileList = new LinkedList<File>(); 
-		String pathTestCase = Configuration.getConfig().getConfigValue(Configuration.TEST_CASE);
+		String pathTestCase = Configuration.getConfig().getConfigValue(Configuration.JOBS);
 		String dataVariables = Configuration.getConfig().getConfigValue(Configuration.VARIABLES);
 		AppLogger.d(TAG, "variables: %s", dataVariables);
 
@@ -89,15 +98,66 @@ public class APITester {
 					fileList.add(new File(file));
 			}
 			
+			Configuration config = Configuration.getConfig();
+			int loop = config.getIntegerValue(Configuration.LOOP, 1);
+			int threads = config.getIntegerValue(Configuration.THREADS, 1);
+			int totalDuration = config.getIntegerValue(Configuration.DURATION, 0);
+			int runTimes = 0;
+			int duration = 0;
+			
+			if (threads < 1) threads = 1;
+			ExecutorService es = Executors.newFixedThreadPool(threads, new PThreadFactory("job"));
+			List<Future<TestStatistics>> futures = new LinkedList<Future<TestStatistics>>();
+
+			final TestStatistics statistics = new TestStatistics("all");
+			final AtomicInteger index = new AtomicInteger(0);
+			final List<File> f = fileList;
+			final VariableCollection v = variables;
+			
+			long startedTime = System.currentTimeMillis();
 			timeStart = System.nanoTime();
-			runTest(fileList, variables);
+			
+			do {
+				final int numberOfRuns = runTimes;
+				for (int i = 0; i < threads; i++)
+				{
+					futures.add(es.submit(new Callable<TestStatistics>() {
+						public TestStatistics call() {
+							int i = index.incrementAndGet();
+							TestStatistics s = new TestStatistics("T-" + numberOfRuns + "-" + i);
+							runTest(s, f, v);
+							
+							return s;
+						}
+					}));
+				}
+				
+				for (Future<TestStatistics> future : futures)
+				{
+					try {
+						statistics.addStatistics(future.get());
+					} catch (InterruptedException | ExecutionException e) {
+						AppLogger.w(TAG, e, "");
+					}
+				}
+				futures.clear();
+				
+				duration = Math.round((System.currentTimeMillis() - startedTime) / 1000 * 100) / 100;
+				AppLogger.d(TAG, "******** total duration: %s", convertDuration(duration));
+			} while (!APITester.isQuitted() && (loop == -1 || ++runTimes < loop || duration < totalDuration));
 			timeEnd = System.nanoTime();
 			
 			long spent = timeEnd - timeStart;
-			
 			String timeDiff = "" + (spent / 1000000) + "ms";
-			
 			AppLogger.i(TAG, "Total time spent: %s", timeDiff);
+			
+			AppLogger.i(TAG, "Total: times=%d (threads=%d) Pass: jobs=%d, actions=%d, Failed: jobs=%d, actions=%d",
+					runTimes,
+					threads,
+					statistics.getNumberOfFiles(TestStatistics.RESULT_PASSED),
+					statistics.getNumberOfActions(TestStatistics.RESULT_PASSED),
+					statistics.getNumberOfFiles(TestStatistics.RESULT_FAILED),
+					statistics.getNumberOfActions(TestStatistics.RESULT_FAILED));
 			
 			System.exit(0);
 		}else{
@@ -115,63 +175,78 @@ public class APITester {
 		config.setConfigs(configs);
 	}
 	
-	private static Map<String, List<String>> runTest(Iterable<File> files, VariableCollection variables)
+	private static void runTest(TestStatistics statistics, Iterable<File> files, VariableCollection variables)
 	{
 		Configuration config = Configuration.getConfig();
-		boolean breakLoop = false;
 		ArrayList<String> passed = new ArrayList<String>();
 		ArrayList<String> failed = new ArrayList<String>();
 		ArrayList<String> untested = new ArrayList<String>();
+		String prefixName = Thread.currentThread().getId() + ":";
 		
-		do
+		boolean skip = false;
+		for (File file : files)
 		{
-			boolean skip = false;
-			for (File file : files)
+			boolean jobSuccess = false;				
+			if (!skip)
 			{
-				boolean jobSuccess = false;				
-				if (!skip)
-				{
-					AppLogger.i(TAG, "Starting test from %s", file.getName());
-					TestJob tester;
-					try {						
-						tester = new TestJob(file.getAbsolutePath(), variables);
-						variables = tester.doTest();
-						jobSuccess = (tester.getErrors() == 0 && tester.getFailure() == 0);
+				AppLogger.i(TAG, "Starting test from %s", file.getName());
+				TestJob tester = null;
+				try {						
+					tester = new TestJob(file.getAbsolutePath(), variables);
+					variables = tester.doTest();
+					jobSuccess = (tester.getErrors() == 0 && tester.getFailure() == 0);
+					
+					if (jobSuccess)
+						passed.add(prefixName + file.getName());
+					else
+					{
+						AppLogger.w("", "TestJob '%s' not pass", file.getName());
+						failed.add(prefixName + file.getName());
+					}
 						
-						if (jobSuccess)
-							passed.add(file.getName());
-						else
-						{
-							AppLogger.w("", "TestJob '%s' not pass", file.getName());
-							failed.add(file.getName());
-						}
-							
-					} catch (Exception e) {
-						AppLogger.e("", e, "failed to run test '%s'", file);
-						failed.add(file.getName());
-					} finally {
+				} catch (Exception e) {
+					AppLogger.e("", e, "failed to run test '%s'", file);
+					failed.add(prefixName + file.getName());
+				} finally {
+					if (tester != null)
+					{
+						statistics.increaseResultNumbers(TestStatistics.RESULT_PASSED, tester.getSuccess());
+						statistics.increaseResultNumbers(TestStatistics.RESULT_FAILED, tester.getFailure());
 					}
 				}
-				else
-					untested.add(file.getName());
-				
-				skip = !config.hasConfig(Configuration.IGNORE_FAIL) && !jobSuccess;
 			}
-		} while (!breakLoop && config.hasConfig(Configuration.REPEAT) && !APITester.isQuitted());
+			else
+				untested.add(prefixName + file.getName());
+			
+			skip = !config.hasConfig(Configuration.IGNORE_FAIL) && !jobSuccess;
+		}
 		
-		String[] passedResults = new String[passed.size()];
-		String[] failedResults = new String[failed.size()];
-		String[] untestedResults = new String[untested.size()];
+		statistics.addResultFiles(TestStatistics.RESULT_PASSED, passed);
+		statistics.addResultFiles(TestStatistics.RESULT_FAILED, failed);
+		statistics.addResultFiles(TestStatistics.RESULT_UNTESTED, untested);
+	}
+	
+	public static String convertDuration(float duration) {
+		float d = duration;
+		StringBuilder sb = new StringBuilder();
 		
-		passedResults = passed.toArray(passedResults);
-		failedResults = failed.toArray(failedResults);
-		untestedResults = untested.toArray(untestedResults);
+		if (d >= DURATION_DAY)
+		{
+			sb.append((d / DURATION_DAY) + " d ");
+			d = d % DURATION_DAY;
+		}
+		if (d >= DURATION_HOUR)
+		{
+			sb.append((d / DURATION_HOUR) + " h ");
+			d = d % DURATION_HOUR;
+		}
+		if (d >= DURATION_MINUTE)
+		{
+			sb.append((d / DURATION_MINUTE) + " m ");
+			d = d % DURATION_MINUTE;
+		}
+		sb.append(d + " s");
 		
-		HashMap<String, List<String>> results = new HashMap<String, List<String>>();
-		results.put("Passed", passed);
-		results.put("Failed", failed);
-		results.put("Untested", untested);
-
-		return results;
+		return sb.toString();
 	}
 }

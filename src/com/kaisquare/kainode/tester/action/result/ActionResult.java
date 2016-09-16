@@ -1,9 +1,10 @@
-package com.kaisquare.kainode.tester.action;
+package com.kaisquare.kainode.tester.action.result;
 
 import java.util.Map;
 import java.util.Map.Entry;
 
 import com.kaisquare.kainode.tester.VariableCollection;
+import com.kaisquare.kainode.tester.action.TestActionStatus;
 
 public abstract class ActionResult {
 	
@@ -19,7 +20,7 @@ public abstract class ActionResult {
 		mMapVariables = variables;
 	}
 	
-	protected void setReason(String reason)
+	public void setReason(String reason)
 	{
 		mReason = reason;
 	}

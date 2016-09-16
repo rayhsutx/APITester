@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import com.kaisquare.kainode.tester.VariableCollection;
+import com.kaisquare.kainode.tester.action.result.ActionResult;
 import com.kaisquare.kaisync.utils.AppLogger;
 
 public abstract class RequestAction implements IAction {
@@ -60,6 +61,12 @@ public abstract class RequestAction implements IAction {
 	protected String parseVariable(String str)
 	{
 		return mVariables.parseVariable(str);
+	}
+	
+	@Override
+	public Class<? extends ActionConfiguration> getConfigurationClass()
+	{
+		return ActionConfiguration.class;
 	}
 
 }

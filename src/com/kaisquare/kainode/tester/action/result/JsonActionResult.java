@@ -1,4 +1,4 @@
-package com.kaisquare.kainode.tester.action;
+package com.kaisquare.kainode.tester.action.result;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -8,6 +8,7 @@ import java.util.Map.Entry;
 
 import com.google.gson.Gson;
 import com.kaisquare.kainode.tester.VariableCollection;
+import com.kaisquare.kainode.tester.action.TestActionStatus;
 
 public class JsonActionResult extends ActionResult {
 	

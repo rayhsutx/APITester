@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import com.kaisquare.kainode.tester.VariableCollection;
+import com.kaisquare.kainode.tester.action.result.ActionResult;
 
 public class ArgumentDeliveryAction extends RequestAction {
 
@@ -20,8 +21,8 @@ public class ArgumentDeliveryAction extends RequestAction {
 
 	@Override
 	public ActionResult submit(ActionConfiguration config) {
-		ArgumentDeliveryActionResult result = new ArgumentDeliveryActionResult(TestActionStatus.Ok, getVariables(), config.data);
-		result.parseResult(config.values);
+		ArgumentDeliveryActionResult result = new ArgumentDeliveryActionResult(TestActionStatus.Ok, getVariables(), config.getData());
+		result.parseResult(config.getValues());
 		return result;
 	}
 

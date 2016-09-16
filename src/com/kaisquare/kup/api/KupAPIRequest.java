@@ -20,7 +20,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import com.google.gson.Gson;
-import com.kaisquare.gson.GsonBuilder;
+import com.kaisquare.gson.DefaultGsonBuilder;
 import com.kaisquare.kaisync.utils.AppLogger;
 import com.kaisquare.kaisync.utils.Utils;
 
@@ -285,7 +285,7 @@ class KupAPIRequest {
 					
 				   // sbResult = new StringBuilder(temp);
 					
-					Gson gson = GsonBuilder.create();
+					Gson gson = DefaultGsonBuilder.create();
 //					Reader reader = new InputStreamReader(is);
 					data = gson.fromJson(sbResult.toString(), mClass);
 				

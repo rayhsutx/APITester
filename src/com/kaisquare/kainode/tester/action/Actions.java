@@ -1,5 +1,9 @@
 package com.kaisquare.kainode.tester.action;
 
+import com.kaisquare.kainode.tester.action.http.HttpRequestAction;
+import com.kaisquare.kainode.tester.action.kaisync.KAISyncAction;
+import com.kaisquare.kainode.tester.action.shell.ShellExecuteAction;
+
 public final class Actions {
 	
 	public static final String ACTION_HTTP = "http";

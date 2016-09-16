@@ -1,4 +1,4 @@
-package com.kaisquare.kainode.tester.action;
+package com.kaisquare.kainode.tester.action.http;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -14,6 +14,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 
+import com.kaisquare.kainode.tester.action.ActionConfiguration;
+import com.kaisquare.kainode.tester.action.Actions;
+import com.kaisquare.kainode.tester.action.RequestAction;
+import com.kaisquare.kainode.tester.action.TestActionStatus;
+import com.kaisquare.kainode.tester.action.result.ActionResult;
+import com.kaisquare.kainode.tester.action.result.JsonActionResult;
 import com.kaisquare.kaisync.utils.AppLogger;
 import com.kaisquare.kaisync.utils.Utils;
 
@@ -21,29 +27,35 @@ public class HttpRequestAction extends RequestAction {
 	
 	public static final List<String> COOKIES = Collections.synchronizedList(new ArrayList<String>());
 	
-	private ActionConfiguration mConfig;
+	private HttpActionConfiguration config;
 	
 	public String getActionName()
 	{
-		return mConfig.name; 
+		return config.getName(); 
+	}
+	
+	@Override
+	public Class<? extends ActionConfiguration> getConfigurationClass()
+	{
+		return HttpActionConfiguration.class;
 	}
 
 	@Override
-	public ActionResult submit(ActionConfiguration config) {
+	public ActionResult submit(ActionConfiguration c) {
 		
-		mConfig = config;
+		config = (HttpActionConfiguration) c;
 		HttpURLConnection conn = null;
 		InputStream in = null;
 		OutputStream os = null;
 		ActionResult result = null;
-		String url = parseVariable(config.url);
+		String url = parseVariable(config.getUrl());
 		
 		try {
 			conn = (HttpURLConnection) new URL(url).openConnection();
 			AppLogger.i(this, "url : %s", url);
 			byte[] postBytes = getPostData(config); 
 			conn.setUseCaches(false);
-			conn.setRequestMethod(config.method);
+			conn.setRequestMethod(config.getMethod());
 			conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded;");
 			conn.setRequestProperty("Connection", "close");
 			if (postBytes.length > 0)
@@ -51,8 +63,8 @@ public class HttpRequestAction extends RequestAction {
 				conn.setRequestProperty("Content-Length", Integer.toString(postBytes.length));
 				conn.setDoOutput(true);
 			}
-			AppLogger.d(this, "set connect timeout: %s", config.timeout);
-			conn.setConnectTimeout(config.timeout);
+			AppLogger.d(this, "set connect timeout: %s", config.getTimeout());
+			conn.setConnectTimeout(config.getTimeout());
 			
 			StringBuilder sbCookie = new StringBuilder();
 			if (COOKIES.size() > 0)
@@ -103,9 +115,9 @@ public class HttpRequestAction extends RequestAction {
 			AppLogger.d(this, "response: %s", sbResult.toString());
 			result = new JsonActionResult(TestActionStatus.Ok, getVariables(), sbResult.toString());
 			result.putVariable("__COOKIE__", cookie);
-			result.parseResult(config.values);
+			result.parseResult(config.getValues());
 			
-			checkResult(result, config.check);			
+			checkResult(result, config.getCheck());			
 		} catch (Exception e) {
 			AppLogger.e(this, e, "HttpRequestAction: " + url);
 			result = new JsonActionResult(TestActionStatus.Error, getVariables(), "");
@@ -135,7 +147,7 @@ public class HttpRequestAction extends RequestAction {
 
 	private byte[] getPostData(ActionConfiguration config) {
 		StringBuilder sb = new StringBuilder();
-		Iterator<Entry<String, Object>> iterator = config.data.entrySet().iterator();
+		Iterator<Entry<String, Object>> iterator = config.getData().entrySet().iterator();
 		while (iterator.hasNext())
 		{
 			Entry<String, Object> entry = iterator.next();

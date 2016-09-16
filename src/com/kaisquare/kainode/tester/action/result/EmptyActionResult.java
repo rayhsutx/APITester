@@ -1,8 +1,9 @@
-package com.kaisquare.kainode.tester.action;
+package com.kaisquare.kainode.tester.action.result;
 
 import java.util.Map;
 
 import com.kaisquare.kainode.tester.VariableCollection;
+import com.kaisquare.kainode.tester.action.TestActionStatus;
 
 public class EmptyActionResult extends ActionResult {
 	
