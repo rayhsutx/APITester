@@ -26,6 +26,7 @@ public final class Configuration {
 	public static final String VARIABLES = "--params";
 	public static final String THREADS = "--threads";
 	public static final String DURATION = "--duration";
+	public static final String OUTPUT_JSON = "--tojson";
 
 	public static void usage()
 	{
@@ -38,6 +39,7 @@ public final class Configuration {
 		System.out.printf("%s   \t%s\n", LOOP, "repeat all the jobs");
 		System.out.printf("%s   \t%s\n", THREADS, "how many threads of a job");
 		System.out.printf("%s   \t%s\n", DURATION, "run the job in a period of time");
+		System.out.printf("%s   \t%s\n", OUTPUT_JSON, "Write the result into a json file");		
 		System.out.println();
 	}
 	

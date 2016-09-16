@@ -13,6 +13,8 @@ import java.util.Map.Entry;
 import com.kaisquare.gson.DefaultGsonBuilder;
 import com.kaisquare.kainode.tester.APITester;
 import com.kaisquare.kainode.tester.ITester;
+import com.kaisquare.kainode.tester.TestStatistics;
+import com.kaisquare.kainode.tester.TestStatistics.Job;
 import com.kaisquare.kainode.tester.VariableCollection;
 import com.kaisquare.kainode.tester.action.Actions;
 import com.kaisquare.kainode.tester.action.Actions.ActionNotFoundException;
@@ -55,7 +57,10 @@ public class TestJob implements ITester {
 	}
 
 	@Override
-	public VariableCollection doTest() throws Exception {
+	public VariableCollection doTest(TestStatistics s) throws Exception {
+		
+		if (s == null)
+			s = new TestStatistics(jobName);
 		
 		ActionResult result = null;
 		double totalSpent = 0;
@@ -97,7 +102,7 @@ public class TestJob implements ITester {
 								start = System.nanoTime();
 								result = action.submit(act.getConfig());
 								end = System.nanoTime();
-								allStatus[n] = result.getStatus();
+								allStatus[n++] = result.getStatus();
 								spent = (end - start) / 1000000f;
 								totalSpent += spent;
 								AppLogger.i(this, ">>>>>>>>>> Action '%s'...%s <<<<<<<<<< (spent: %f ms)\n", act.getName(), result.getStatus(), spent);
@@ -116,9 +121,12 @@ public class TestJob implements ITester {
 													result.getReason() :
 													"action '" + act.getName() + "' failed");
 								}
+								else
+									s.addResultJob(TestStatistics.RESULT_PASSED, new Job(n, Thread.currentThread().getId(), act.getName(), start, end));
 							} catch (Exception e) {
 								if (!act.isIgnoreError())
 								{
+									s.addResultJob(TestStatistics.RESULT_FAILED, new Job(n, Thread.currentThread().getId(), act.getName(), 0, 0));
 									ex = e;
 									break;
 								}

@@ -11,19 +11,25 @@ public class TestStatistics {
 	public static final String RESULT_FAILED = "Failed";
 	public static final String RESULT_UNTESTED = "Untested";
 	
-	private Map<String, List<String>> files;
-	private Map<String, Integer> counts;
-	private Map<String, Integer> results;
-	private Map<String, TestStatistics> details;
+	private Map<String, List<Job>> jobs;
+	private Map<String, Integer> jobResults;
+	private List<TestStatistics> details;
+	private Map<String, Integer> detailResults;
 	private String name;
+	
+	private static final String[] Alltypes = {
+		TestStatistics.RESULT_PASSED,
+		TestStatistics.RESULT_FAILED,
+		TestStatistics.RESULT_UNTESTED
+	};
 	
 	public TestStatistics(String name)
 	{
 		this.name = name;
-		files = new LinkedHashMap<String, List<String>>();
-		counts = new LinkedHashMap<String, Integer>();
-		results = new LinkedHashMap<String, Integer>();
-		details = new LinkedHashMap<String, TestStatistics>();
+		jobs = new LinkedHashMap<String, List<Job>>();
+		jobResults = new LinkedHashMap<String, Integer>();
+		details = new LinkedList<TestStatistics>();
+		detailResults = new LinkedHashMap<String, Integer>();
 	}
 	
 	public String getName()
@@ -31,61 +37,114 @@ public class TestStatistics {
 		return name;
 	}
 	
-	public void addStatistics(TestStatistics s)
+	public void addDetail(TestStatistics s)
 	{
-		String[] types = {
-			TestStatistics.RESULT_PASSED,
-			TestStatistics.RESULT_FAILED,
-			TestStatistics.RESULT_UNTESTED
-		};
-		for (String type : types)
+		if (s == null)
+			return;
+		
+		for (String type : Alltypes)
 		{
-			Integer count = counts.get(type);
-			if (count == null)
-				count = Integer.valueOf(0);
-			counts.put(type, count.intValue() + s.getNumberOfFiles(type));
+			detailResults.put(type, getIntValue(detailResults.get(type)) + s.getNumberOfJobResult(type));
 		}
-		increaseResultNumbers(TestStatistics.RESULT_PASSED, s.getNumberOfActions(TestStatistics.RESULT_PASSED));
-		increaseResultNumbers(TestStatistics.RESULT_FAILED, s.getNumberOfActions(TestStatistics.RESULT_FAILED));
-		details.put(s.getName(), s);
+		details.add(s);
 	}
 	
-	public synchronized void addResultFiles(String type, List<String> files)
+	public synchronized void addResultJob(String type, Job job)
 	{
-		Integer count = counts.get(type);
-		if (count == null)
-			count = Integer.valueOf(0);
-		List<String> list = this.files.get(type);
+		List<Job> list = this.jobs.get(type);
 		if (list == null)
 		{
-			list = new LinkedList<String>();
-			this.files.put(type, list);
+			list = new LinkedList<Job>();
+			this.jobs.put(type, list);
 		}
-		list.addAll(files);
-		counts.put(type, count.intValue() + files.size());
+		list.add(job);
+		jobResults.put(type, getIntValue(jobResults.get(type)) + 1);
 	}
 	
-	public List<String> getResultFiles(String type)
+	public synchronized void addResultJobs(String type, List<Job> jobs)
 	{
-		return files.get(type);
+		for (Job job : jobs)
+			addResultJob(type, job);
 	}
 	
-	public int getNumberOfFiles(String type)
+	public List<Job> getResultJobs(String type)
 	{
-		return counts.get(type);
+		return jobs.get(type);
+	}
+	
+	public int getNumberOfJobs(String type)
+	{
+		return jobs.get(type) == null ? 0 : jobs.get(type).size();
+	}
+	
+	public int getNumberOfDetails()
+	{
+		return details.size();
 	}
 	
 	public synchronized void increaseResultNumbers(String type, int value)
 	{
-		Integer n = results.get(type);
-		if (n == null)
-			n = Integer.valueOf(0);
-		results.put(type, n.intValue() + value);
+		jobResults.put(type, getIntValue(jobResults.get(type)) + value);
 	}
 	
-	public Integer getNumberOfActions(String type)
+	public Integer getNumberOfJobResult(String type)
 	{
-		return results.get(type);
+		return getIntValue(jobResults.get(type));
+	}
+	
+	public Integer getNumberOfDetailResult(String type)
+	{
+		return getIntValue(detailResults.get(type));
+	}
+	
+	private int getIntValue(Integer n)
+	{
+		return n == null ? 0 : n.intValue();
+	}
+	
+	@Override
+	public String toString()
+	{
+		return String.format("Pass: jobs=%d, actions=%d, Failed: jobs=%d, actions=%d",
+					getNumberOfJobs(TestStatistics.RESULT_PASSED),
+					getNumberOfJobResult(TestStatistics.RESULT_PASSED),
+					getNumberOfJobs(TestStatistics.RESULT_FAILED),
+					getNumberOfJobResult(TestStatistics.RESULT_FAILED));
+	}
+	
+	public static class Job
+	{
+		public long index;
+		public long group;
+		public String name;
+		public long start;
+		public long end;
+		private double spent;
+		
+		public Job()
+		{
+		}
+		
+		public Job(long index, long group, String name, long start, long end)
+		{
+			this.index = index;
+			this.group = group;
+			this.name = name;
+			this.start = start;
+			this.end = end;
+			calculateSpent();
+		}
+		
+		public void calculateSpent()
+		{
+			spent = (end - start) / 1000000f;
+			spent = Math.round(spent * 100) / (double)100;
+		}
+		
+		public double getSpent()
+		{
+			return spent;
+		}
 	}
 
 }
