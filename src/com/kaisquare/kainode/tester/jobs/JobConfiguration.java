@@ -43,6 +43,8 @@ public class JobConfiguration {
 		private int retry = 0;
 		private int repeat = 0; //-1: infinite, > 0: count of repeat
 		private boolean ignoreError = false;
+		@SerializedName("max-response-time")
+		private int maxResponseTime = 0;
 		private ActionConfiguration config;
 		private List<String> print;
 		
@@ -73,6 +75,10 @@ public class JobConfiguration {
 		
 		public boolean isIgnoreError() {
 			return ignoreError;
+		}
+
+		public int getMaxResponseTime() {
+			return maxResponseTime;
 		}
 		
 		public ActionConfiguration getConfig() {

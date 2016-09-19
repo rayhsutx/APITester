@@ -257,9 +257,14 @@ public class ShellExecuteAction extends RequestAction {
 				Matcher matcher = pattern.matcher(input);
 				while (matcher.find())
 				{
-					int start = matcher.start();
-					int end = matcher.end();
-					sb.append(new String(input.substring(start, end)));
+					if (matcher.groupCount() > 0)
+						sb.append(matcher.group(1));
+					else
+					{
+						int start = matcher.start();
+						int end = matcher.end();
+						sb.append(new String(input.substring(start, end)));
+					}
 				}
 				value = sb.toString();
 			}

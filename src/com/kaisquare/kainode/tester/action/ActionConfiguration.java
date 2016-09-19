@@ -3,6 +3,8 @@ package com.kaisquare.kainode.tester.action;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import com.google.gson.annotations.SerializedName;
+
 public class ActionConfiguration {
 
 	//general use

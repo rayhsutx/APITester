@@ -123,7 +123,12 @@ public class TestJob implements ITester {
 													"action '" + act.getName() + "' failed");
 								}
 								else
+								{
+									if (act.getMaxResponseTime() > 0 && spent > act.getMaxResponseTime())
+										throw new ActionFailedException("response time is not as expected, (it shoulde be '" + act.getMaxResponseTime() + "', but it's '" + spent + "')");
+									
 									s.addResultJob(TestStatistics.RESULT_PASSED, new Job(n, Thread.currentThread().getId(), act.getName(), timer.getStartTime(), timer.getEndTime()));
+								}
 							} catch (Exception e) {
 								if (!act.isIgnoreError())
 								{
