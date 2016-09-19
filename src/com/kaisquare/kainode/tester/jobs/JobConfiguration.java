@@ -2,11 +2,14 @@ package com.kaisquare.kainode.tester.jobs;
 
 import java.util.List;
 
+import com.google.gson.annotations.SerializedName;
 import com.kaisquare.kainode.tester.action.ActionConfiguration;
 
 public class JobConfiguration {
 	
 	private List<JobActionConfiguration> actions;
+	@SerializedName("failure-on-actions")
+	private List<JobActionConfiguration> failedActions;
 	private int defaultDelay = 0;
 	private int loop = 1;
 	private int duration = 0;
@@ -21,6 +24,11 @@ public class JobConfiguration {
 
 	public List<JobActionConfiguration> getActions() {
 		return actions;
+	}
+	
+	public List<JobActionConfiguration> getFailedActions()
+	{
+		return failedActions;
 	}
 
 	protected int getDefaultDelay() {

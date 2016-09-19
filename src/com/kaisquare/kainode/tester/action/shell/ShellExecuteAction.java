@@ -115,7 +115,7 @@ public class ShellExecuteAction extends RequestAction {
 			} catch (InterruptedException e) {}
 			
 			values.put("exitvalue", Integer.toString(exitValue));
-			
+			result.putVariableAll(values);
 			checkResult(result, config.getCheck());
 		} catch (IOException e) {
 			AppLogger.e(this, e, "error executing command: %s", Utils.isStringEmpty(command) ? config.getCommand() : command);

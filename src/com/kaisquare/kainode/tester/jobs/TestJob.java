@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -66,6 +67,7 @@ public class TestJob implements ITester {
 		double totalSpent = 0;
 		Exception ex = null;
 		int loop = 1;
+		RunningTimer timer = new RunningTimer();
 		
 		try {
 			if (config.getActions().size() > 0)
@@ -77,7 +79,7 @@ public class TestJob implements ITester {
 					allStatus = new TestActionStatus[config.getActions().size()];
 					int n = 0, retry = 0;
 					for (JobActionConfiguration act : config.getActions())
-					{					
+					{
 						if (APITester.isQuitted())
 							break;
 						
@@ -85,7 +87,6 @@ public class TestJob implements ITester {
 						action.setVariables(variables);
 						
 						int repeat = 0;
-						long start, end;
 						double spent;
 						for (;;) {
 							if (act.getDelay() > 0)
@@ -98,12 +99,12 @@ public class TestJob implements ITester {
 							
 							try {
 								ex = null;
-								AppLogger.i(this, "\n>>>>>>>>>> Starting Action '%s'... <<<<<<<<<< (repeat %d)", act.getName(), repeat);
-								start = System.nanoTime();
+								AppLogger.i(this, ">>>>>>>>>> Starting Action '%s'... <<<<<<<<<< (repeat %d)", act.getName(), repeat);
+								timer.start();
 								result = action.submit(act.getConfig());
-								end = System.nanoTime();
+								timer.stop();
 								allStatus[n++] = result.getStatus();
-								spent = (end - start) / 1000000f;
+								spent = timer.getSpentTime();
 								totalSpent += spent;
 								AppLogger.i(this, ">>>>>>>>>> Action '%s'...%s <<<<<<<<<< (spent: %f ms)\n", act.getName(), result.getStatus(), spent);
 								
@@ -122,7 +123,7 @@ public class TestJob implements ITester {
 													"action '" + act.getName() + "' failed");
 								}
 								else
-									s.addResultJob(TestStatistics.RESULT_PASSED, new Job(n, Thread.currentThread().getId(), act.getName(), start, end));
+									s.addResultJob(TestStatistics.RESULT_PASSED, new Job(n, Thread.currentThread().getId(), act.getName(), timer.getStartTime(), timer.getEndTime()));
 							} catch (Exception e) {
 								if (!act.isIgnoreError())
 								{
@@ -186,6 +187,7 @@ public class TestJob implements ITester {
 		} catch (ActionFailedException e) {
 			AppLogger.e(this, "'%s' stopped: %s", jobName, e.getMessage());
 			failed++;
+			doFailedActions();
 		} catch (Exception e) { 
 			AppLogger.e(this, e, "'%s' stopped: %s", jobName, e.getMessage());
 			if (ex == null) error++;
@@ -196,6 +198,34 @@ public class TestJob implements ITester {
 		
 		AppLogger.i(this, "Done");
 		return variables;
+	}
+
+	private void doFailedActions() {
+		List<JobActionConfiguration> actions = config.getFailedActions();
+		if (actions != null)
+		{
+			ActionResult result = null;
+			RunningTimer timer = new RunningTimer();
+			AppLogger.i(this, "Run post action for failures...");
+			for (JobActionConfiguration act : actions)
+			{
+				if (APITester.isQuitted())
+					break;
+				
+				try {
+					RequestAction action = (RequestAction)Actions.create(act.getType());
+					action.setVariables(variables);
+					
+					AppLogger.i(this, "********** Starting Post Action '%s'... **********", act.getName());
+					timer.start();
+					result = action.submit(act.getConfig());
+					timer.stop();
+					AppLogger.i(this, "********** Post Action '%s'...%s ********** (spent: %f ms)\n", act.getName(), result.getStatus(), timer.getSpentTime());
+				} catch (Exception e) {
+					AppLogger.e(this, "failed running action '%s'", e.getMessage());
+				}
+			}
+		}
 	}
 
 	private void printVariables(Map<String, String> variables) {
@@ -253,5 +283,42 @@ public class TestJob implements ITester {
 			super(cause);
 		}
 		
+	}
+	
+	static class RunningTimer
+	{
+		private long startTime;
+		private long endTime;
+		private double spentTime;
+
+		public RunningTimer()
+		{
+		}
+		
+		public void start()
+		{
+			startTime = System.nanoTime();
+		}
+		
+		public void stop()
+		{
+			endTime = System.nanoTime();
+			spentTime = endTime - startTime;
+		}
+		
+		public long getStartTime()
+		{
+			return startTime;
+		}
+		
+		public long getEndTime()
+		{
+			return endTime;
+		}
+		
+		public double getSpentTime()
+		{
+			return spentTime / (double)1000000;
+		}
 	}
 }
