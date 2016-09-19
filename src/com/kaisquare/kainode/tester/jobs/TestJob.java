@@ -182,7 +182,7 @@ public class TestJob implements ITester {
 					
 					duration = Math.round((System.currentTimeMillis() - startedTime) / 1000f * 100) / 100;
 					AppLogger.d(this, "'%s' duration: %s", jobName, APITester.convertDuration(duration));
-				} while (++loop < config.getLoop() || duration < config.getDuration());
+				} while ((++loop < config.getLoop() || config.getLoop() == -1) || duration < config.getDuration());
 			}
 			else
 				AppLogger.i(this, "No actions");
