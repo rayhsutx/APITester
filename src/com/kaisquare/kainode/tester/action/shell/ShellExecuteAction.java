@@ -205,7 +205,7 @@ public class ShellExecuteAction extends RequestAction {
 			
 			return String.valueOf(value);
 		} catch (Throwable e) {
-			AppLogger.e("getPID", e, "");
+			AppLogger.e("getPID", "");
 		}
 		
 		return "";

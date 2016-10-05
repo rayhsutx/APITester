@@ -117,7 +117,7 @@ public class HttpRequestAction extends RequestAction {
 			result.putVariable("__COOKIE__", cookie);
 			result.parseResult(config.getValues());
 			
-			checkResult(result, config.getCheck());			
+			checkResult(result, config.getCheck());
 		} catch (Exception e) {
 			AppLogger.e(this, e, "HttpRequestAction: " + url);
 			result = new JsonActionResult(TestActionStatus.Error, getVariables(), "");
