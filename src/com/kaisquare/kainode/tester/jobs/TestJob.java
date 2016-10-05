@@ -28,6 +28,7 @@ import com.kaisquare.kaisync.utils.Utils;
 
 public class TestJob implements ITester {
 	
+	private static final String VARIABLE_ACTION_NAME = "__action";
 	private String jobName;
 	private JobConfiguration config;
 	private TestActionStatus[] allStatus;
@@ -84,6 +85,7 @@ public class TestJob implements ITester {
 							break;
 						
 						RequestAction action = (RequestAction)Actions.create(act.getType());
+						variables.put(VARIABLE_ACTION_NAME, act.getName());
 						action.setVariables(variables);
 						
 						int repeat = 0;
